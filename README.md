@@ -1,6 +1,6 @@
 # Switchie
 
-Polished online multiplayer card game with AI, private rooms, room chat, private player-to-player chat, smooth card animations, and a single-screen casino-style interface.
+Real-time multiplayer hidden-card game with AI opponents, room management, room/private chat, animations, and a cinematic wood-and-felt table UI.
 
 ## Run locally
 
@@ -11,25 +11,16 @@ npm install
 npm start
 ```
 
-Then open `http://localhost:3000`.
+Open `http://localhost:3000`.
 
-## Multiplayer
+## Room flow
 
-Create a room, share the room code/invite link, add AI, and start the game. AI players are server-controlled and remain shown as connected. Human players can reconnect using their stored player identity while the room is still in memory.
+Create a room, add AI or invite friends, edit the room name, then start the game. The host controls room settings.
 
-## Chat
+## Deck recycling
 
-- **Room Chat** is visible to everyone in the room.
-- **Private** chat lets one human player message another human player.
-
-## UI
-
-The game is designed as a single-screen, no-scroll casino/tabletop interface with dark wood, green felt, gold trim, neutral placeholder avatars, ornate card backs, animated piles, centered reveal modals, and smooth card transitions.
+When the draw pile becomes empty, all discard cards except the current top card are shuffled back into the draw pile automatically so play can continue.
 
 ## Deployment
 
-This is a Node/Express + Socket.IO server. Deploy it to a host that supports long-lived WebSocket connections, such as Render, Railway, Fly.io, or a VPS. The server binds to `0.0.0.0` and uses the `PORT` environment variable.
-
-## State/security
-
-Cards remain on the server. Hidden cards are not sent to other players. Ability reveals are sent only to the player entitled to see them. Wrong throws are intentionally revealed to everyone. Room state is in memory, so a server restart clears active rooms/games.
+Deploy as a Node/Express Web Service with `npm install` as the build command and `npm start` as the start command. The server uses the platform `PORT` environment variable and binds to `0.0.0.0`.

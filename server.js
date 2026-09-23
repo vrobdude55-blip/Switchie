@@ -27,6 +27,16 @@ function makeDeck(){
   for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]];}
   return d;
 }
+function shuffle(cards){ for(let i=cards.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [cards[i],cards[j]]=[cards[j],cards[i]]; } return cards; }
+function recycleDiscardIntoDeck(room){
+  if(room.deck.length || room.pile.length<=1) return false;
+  const top=room.pile.at(-1);
+  const recycled=room.pile.slice(0,-1);
+  room.pile=[top];
+  room.deck=shuffle(recycled);
+  log(room,'♻️ Draw pile was empty. The discard pile was shuffled back into the draw pile.');
+  return true;
+}
 function playerById(room,id){ return room.players.find(p=>p.id===id); }
 function connectedHumans(room){ return room.players.filter(p=>!p.ai && p.socketId); }
 function playerIndex(room,id){ return room.players.findIndex(p=>p.id===id); }
@@ -40,7 +50,7 @@ function addRoomChat(room,from,text,kind='room',toId=null){
 function publicState(room, socketId){
   const me = room.players.find(p=>p.socketId===socketId);
   return {
-    code: room.code, hostId: room.hostId, started: room.started, turn: room.turn,
+    code: room.code, title: room.title || room.code, hostId: room.hostId, started: room.started, turn: room.turn,
     knocked: room.knocked, finalTurns: room.finalTurns, ended: room.ended,
     winner: room.winner, pileTop: cardPublic(room.pile.at(-1)), deckCount: room.deck.length,
     drawn: me ? cardPublic(room.drawn[me.id]) : null,
@@ -57,7 +67,7 @@ function emitRoom(room){
 function createRoom(hostName){
   const code=roomId();
   const host={id:token(),socketId:null,name:String(hostName||'Player').slice(0,20),ai:false,hand:[]};
-  const room={code,hostId:host.id,players:[host],deck:[],pile:[],turn:0,started:false,ended:false,knocked:false,finalTurns:0,drawn:{},logs:['Lobby created. Invite friends or add AI, then start the game.'],scores:null,winner:null,pendingKing:null,chat:[]};
+  const room={code,hostId:host.id,players:[host],deck:[],pile:[],turn:0,started:false,ended:false,knocked:false,finalTurns:0,drawn:{},title:code,logs:['Lobby created. Invite friends or add AI, then start the game.'],scores:null,winner:null,pendingKing:null,chat:[]};
   rooms.set(code,room); return room;
 }
 function addAI(room){
@@ -113,7 +123,8 @@ function aiTurn(room,p){
     aiSay(room,p); emptyWin(room); return;
   }
   if(room.knocked && Math.random()<0.18){ beginKnock(room,p); aiSay(room,p); return; }
-  if(!room.deck.length) return;
+  recycleDiscardIntoDeck(room);
+  if(!room.deck.length){ advanceToNext(room); return; }
   const drawn=room.deck.pop();
   room.drawn[p.id]=drawn; log(room,`🤖 ${p.name} drew a card.`);
   if(specialRanks.has(drawn.r)){
@@ -171,10 +182,10 @@ io.on('connection', socket=>{
   socket.on('join', ({code,name='Player',playerId}={})=>{try{const room=rooms.get(String(code||'').trim().toUpperCase());if(!room)throw new Error('Room not found.');const reconnect=playerId&&room.players.find(p=>p.id===playerId&&!p.ai);if(reconnect){reconnect.socketId=socket.id;socket.data.playerId=reconnect.id;socket.join(room.code);socket.emit('joined',{code:room.code,playerId:reconnect.id});log(room,`${reconnect.name} reconnected.`);emitRoom(room);return;}if(room.started)throw new Error('That game has already started.');if(room.players.length>=4)throw new Error('Room is full.');const p={id:token(),socketId:socket.id,name:String(name||'Player').slice(0,20),ai:false,hand:[]};room.players.push(p);socket.data.playerId=p.id;socket.join(room.code);socket.emit('joined',{code:room.code,playerId:p.id});log(room,`${p.name} joined the room.`);addRoomChat(room,p.name,'Hello!');emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('addAI',()=>{try{const room=roomForSocket(socket);if(!room)throw new Error('Join a room first.');if(room.hostId!==socket.data.playerId)throw new Error('Only the host can add AI.');if(!addAI(room))throw new Error('Room is full or game already started.');emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('start',()=>{try{const room=roomForSocket(socket);if(!room)throw new Error('Join a room first.');if(room.hostId!==socket.data.playerId)throw new Error('Only the host can start.');startGame(room);emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
-  socket.on('draw',()=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket);if(room.drawn[p.id])throw new Error('You already drew a card.');if(!room.deck.length)throw new Error('The deck is empty.');room.drawn[p.id]=room.deck.pop();log(room,`${p.name} drew a card.`);emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
+  socket.on('draw',()=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket);if(room.drawn[p.id])throw new Error('You already drew a card.');recycleDiscardIntoDeck(room);if(!room.deck.length)throw new Error('There are no cards left to draw.');room.drawn[p.id]=room.deck.pop();log(room,`${p.name} drew a card.`);emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('discardDrawn',()=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket),c=room.drawn[p.id];if(!c)throw new Error('Draw a card first.');room.pile.push(c);delete room.drawn[p.id];log(room,`${p.name} played ${label(c)} to the pile.`);finishHumanAction(room);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('replace',({index}={})=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket),c=room.drawn[p.id];if(!c)throw new Error('Draw a card first.');if(!Number.isInteger(index)||index<0||index>=p.hand.length)throw new Error('Invalid card position.');const old=p.hand[index];p.hand[index]=c;room.pile.push(old);delete room.drawn[p.id];log(room,`${p.name} replaced position ${index+1}.`);finishHumanAction(room);}catch(e){socket.emit('errorMsg',e.message)}});
-  socket.on('throw',({index}={})=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket);if(!Number.isInteger(index)||index<0||index>=p.hand.length)throw new Error('Invalid card position.');const c=p.hand[index],top=room.pile.at(-1);if(sameRank(c,top)){p.hand.splice(index,1);log(room,`✅ ${p.name} correctly threw ${label(c)} onto ${label(top)}.`);finishHumanAction(room);}else{p.hand.splice(index,1);p.hand.push(c,top);log(room,`❌ ${p.name} made a wrong throw. ${label(c)} was revealed and both cards were taken.`);for(const viewer of connectedHumans(room))io.to(viewer.socketId).emit('publicReveal',{name:p.name,thrown:cardPublic(c),pile:cardPublic(top),seconds:4});emitRoom(room);}}catch(e){socket.emit('errorMsg',e.message)}});
+  socket.on('throw',({index}={})=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket);if(!Number.isInteger(index)||index<0||index>=p.hand.length)throw new Error('Invalid card position.');const c=p.hand[index],top=room.pile.at(-1);if(sameRank(c,top)){p.hand.splice(index,1);log(room,`✅ ${p.name} correctly threw ${label(c)} onto ${label(top)}.`);finishHumanAction(room);}else{p.hand.splice(index,1);p.hand.push(c,top);log(room,`❌ ${p.name} made a wrong throw. ${label(c)} was revealed and both cards were taken.`);for(const viewer of connectedHumans(room))io.to(viewer.socketId).emit('publicReveal',{name:p.name,thrown:cardPublic(c),pile:cardPublic(top),seconds:4});emitRoom(room);setTimeout(()=>{if(!room.ended&&room.turn===playerIndex(room,p.id))finishHumanAction(room)},4050);}}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('knock',()=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket);if(room.drawn[p.id])throw new Error('Finish your drawn card first.');if(room.knocked)throw new Error('Someone already knocked.');beginKnock(room,p);finishNewKnock(room);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('abilityLookOwn',({index}={})=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket),c=room.drawn[p.id];if(!c||!['8','9','10'].includes(c.r))throw new Error('Draw an 8, 9 or 10 first.');if(!Number.isInteger(index)||index<0||index>=p.hand.length)throw new Error('Invalid card position.');room.pile.push(c);delete room.drawn[p.id];log(room,`${p.name} used ${c.r} to look at position ${index+1}.`);socket.emit('reveal',{kind:'own',cards:[{owner:p.name,index,card:cardPublic(p.hand[index])}],seconds:4});emitRoom(room);setTimeout(()=>{if(!room.ended&&room.turn===playerIndex(room,p.id))advanceToNext(room);},4050);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('abilityJack',({ownIndex,targetId,targetIndex}={})=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket),o=playerById(room,targetId),c=room.drawn[p.id];if(!c||c.r!=='J')throw new Error('Draw a Jack first.');if(!o||o===p||ownIndex<0||targetIndex<0||ownIndex>=p.hand.length||targetIndex>=o.hand.length)throw new Error('Invalid card position.');room.pile.push(c);delete room.drawn[p.id];[p.hand[ownIndex],o.hand[targetIndex]]=[o.hand[targetIndex],p.hand[ownIndex]];log(room,`${p.name} used Jack to blindly switch with ${o.name}.`);finishHumanAction(room);}catch(e){socket.emit('errorMsg',e.message)}});
@@ -183,6 +194,8 @@ io.on('connection', socket=>{
   socket.on('sendChat',({text}={})=>{try{const room=roomForSocket(socket),p=room?.players.find(x=>x.socketId===socket.id);if(!room||!p)throw new Error('Join a room first.');const msg=addRoomChat(room,p.name,text);if(!msg)throw new Error('Message is empty.');emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('sendPrivateChat',({toId,text}={})=>{try{const room=roomForSocket(socket),from=room?.players.find(x=>x.socketId===socket.id),to=room?.players.find(x=>x.id===toId);if(!room||!from||!to)throw new Error('Choose a player first.');if(to.ai)throw new Error('AI players do not accept private messages.');const msg=addRoomChat(room,from.name,text,'private',to.id);if(!msg)throw new Error('Message is empty.');for(const id of [from.id,to.id]){const target=playerById(room,id);if(target?.socketId)io.to(target.socketId).emit('privateChat',msg);}}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('state',()=>{const room=roomForSocket(socket);if(room)socket.emit('state',publicState(room,socket.id));});
+  socket.on('leaveRoom',()=>{try{const room=roomForSocket(socket);if(!room)return;const p=room.players.find(x=>x.socketId===socket.id);if(!p) return;room.players=room.players.filter(x=>x.id!==p.id);if(room.hostId===p.id){const next=room.players.find(x=>!x.ai)||room.players[0];if(next)room.hostId=next.id;}socket.leave(room.code);socket.data.playerId=null;if(room.players.length===0){rooms.delete(room.code);return;}log(room,`${p.name} left the room.`);emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
+  socket.on('roomSettings',({roomTitle}={})=>{try{const room=roomForSocket(socket);if(!room)throw new Error('Join a room first.');if(room.hostId!==socket.data.playerId)throw new Error('Only the host can edit room settings.');room.title=String(roomTitle||'').trim().slice(0,32)||room.code;log(room,`Room settings updated.`);emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('disconnect',()=>{for(const room of rooms.values()){const p=room.players.find(x=>x.socketId===socket.id);if(!p)continue;p.socketId=null;if(!p.ai){log(room,`${p.name} disconnected.`);if(room.hostId===p.id){const next=room.players.find(x=>!x.ai&&x.socketId);if(next){room.hostId=next.id;log(room,`${next.name} is now the host.`);}}emitRoom(room);}}});
 });
 
