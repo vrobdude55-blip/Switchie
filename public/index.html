@@ -4,7 +4,40 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Switchie</title>
-<script src="/socket.io/socket.io.js"></script>
+<script src="/socket.io/socket.io.js">
+/* ===== Layout editor logic ===== */
+const EDITOR_KEY='switchie-layout-v1';
+let editorOn=false,editorSelected=null,editorDrag=null,editorState={};
+const EDITOR_EXCLUDE=new Set(['editToolbar','editHint','editTextPanel','editorOverlay','modalHost','toast','lobby']);
+function editorId(el){if(!el||el===document.body||el===document.documentElement)return null;if(el.id)return '#'+el.id;const parts=[];let n=el;while(n&&n!==$('game')){let tag=n.tagName.toLowerCase(),i=1;let sib=n.previousElementSibling;while(sib){if(sib.tagName===n.tagName)i++;sib=sib.previousElementSibling}parts.unshift(`${tag}:nth-of-type(${i})`);n=n.parentElement}return '#game>'+parts.join('>')}
+function editorLabel(el){if(!el)return 'Nothing selected';let t=(el.innerText||el.textContent||el.id||el.className||'Element').trim().replace(/\s+/g,' ');return t.slice(0,32)||el.id||'Element'}
+function editorEligible(el){if(!el||!(el instanceof HTMLElement)||!$('game')?.contains(el))return false;if(EDITOR_EXCLUDE.has(el.id))return false;if(el.closest('#editToolbar,#editHint,#editTextPanel,#editorOverlay,#modalHost,#toast'))return false;if(el===document.querySelector('.table')||el===document.querySelector('.shell')||el===document.querySelector('.content')||el===document.querySelector('.center')||el===document.querySelector('.stage'))return false;return true}
+function editorGet(el){const id=editorId(el);if(!id)return null;return editorState[id]||{id,text:null,x:0,y:0,s:1,r:0,label:editorLabel(el)} }
+function editorApply(el){const st=editorGet(el);el.classList.add('editorTarget');el.style.setProperty('--edit-x',`${st.x||0}px`);el.style.setProperty('--edit-y',`${st.y||0}px`);el.style.setProperty('--edit-s',`${st.s||1}`);el.style.setProperty('--edit-r',`${st.r||0}deg`);if(st.text!=null && el.childElementCount===0)el.textContent=st.text}
+function editorApplyAll(){document.querySelectorAll('#game *').forEach(el=>{if(editorEligible(el)){const id=editorId(el);if(editorState[id])editorApply(el)}});editorRefreshHandles()}
+function editorSave(){try{localStorage.setItem(EDITOR_KEY,JSON.stringify(editorState))}catch(e){}}
+function editorLoad(){try{const raw=localStorage.getItem(EDITOR_KEY);if(raw)editorState=JSON.parse(raw)||{}}catch(e){editorState={}}}
+function editorRemoveSelection(){if(editorSelected){editorSelected.classList.remove('editorSelected','editorTextTarget');editorSelected=null}$('editorHandles').classList.remove('open');$('editTextPanel').classList.remove('open');$('editSelectionName').textContent='Nothing selected'}
+function editorSelect(el){if(!editorEligible(el))return;editorRemoveSelection();editorSelected=el;editorApply(el);el.classList.add('editorSelected');if((el.childElementCount===0 || /^[^<>]+$/.test(el.textContent||'')) && (el.textContent||'').trim())el.classList.add('editorTextTarget');$('editSelectionName').textContent=editorLabel(el);editorRefreshHandles()}
+function editorRefreshHandles(){const h=$('editorHandles');if(!editorSelected||!editorOn){h.classList.remove('open');return}const r=editorSelected.getBoundingClientRect();h.style.left=`${r.left}px`;h.style.top=`${r.top}px`;h.style.width=`${r.width}px`;h.style.height=`${r.height}px`;h.classList.add('open')}
+function editorUpdate(){if(!editorSelected)return;const st=editorGet(editorSelected);editorState[st.id]=st;editorApply(editorSelected);editorRefreshHandles();editorSave()}
+function editorStartMove(e){if(!editorOn||!editorSelected||e.target.closest('.editorHandle,.editorRotate'))return;if(e.button!==undefined&&e.button!==0)return;e.preventDefault();e.stopPropagation();const st=editorGet(editorSelected);editorDrag={type:'move',sx:e.clientX,sy:e.clientY,x:st.x||0,y:st.y||0};window.addEventListener('pointermove',editorPointerMove);window.addEventListener('pointerup',editorPointerUp,{once:true})}
+function editorStartScale(e,handle){if(!editorSelected)return;e.preventDefault();e.stopPropagation();const r=editorSelected.getBoundingClientRect(),st=editorGet(editorSelected);editorDrag={type:'scale',sx:e.clientX,sy:e.clientY,w:r.width,h:r.height,s:st.s||1,handle,baseW:r.width,baseH:r.height};window.addEventListener('pointermove',editorPointerMove);window.addEventListener('pointerup',editorPointerUp,{once:true})}
+function editorStartRotate(e){if(!editorSelected)return;e.preventDefault();e.stopPropagation();const r=editorSelected.getBoundingClientRect(),st=editorGet(editorSelected);editorDrag={type:'rotate',cx:r.left+r.width/2,cy:r.top+r.height/2,startAngle:Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))*180/Math.PI,r:st.r||0};window.addEventListener('pointermove',editorPointerMove);window.addEventListener('pointerup',editorPointerUp,{once:true})}
+function editorPointerMove(e){if(!editorSelected||!editorDrag)return;const st=editorGet(editorSelected);if(editorDrag.type==='move'){st.x=editorDrag.x+(e.clientX-editorDrag.sx);st.y=editorDrag.y+(e.clientY-editorDrag.sy)}else if(editorDrag.type==='scale'){const dx=e.clientX-editorDrag.sx,dy=e.clientY-editorDrag.sy;let delta=(Math.abs(dx)>Math.abs(dy)?dx:dy);if(editorDrag.handle==='nw'||editorDrag.handle==='sw')delta=-delta;const factor=Math.max(.15,Math.min(5,editorDrag.s*(1+delta/Math.max(80,editorDrag.baseW))));st.s=factor}else if(editorDrag.type==='rotate'){const a=Math.atan2(e.clientY-editorDrag.cy,e.clientX-editorDrag.cx)*180/Math.PI;st.r=Math.round((editorDrag.r+a-editorDrag.startAngle)*10)/10}editorState[st.id]=st;editorApply(editorSelected);editorRefreshHandles()}
+function editorPointerUp(){editorDrag=null;editorSave()}
+function editorOpenText(){if(!editorSelected)return;const txt=editorSelected.dataset.editorText!=null?editorSelected.dataset.editorText:(editorSelected.innerText||editorSelected.textContent||'').trim();$('editTextArea').value=txt;$('editTextPanel').classList.add('open');$('editTextArea').focus()}
+function editorApplyText(){if(!editorSelected)return;const v=$('editTextArea').value;const st=editorGet(editorSelected);st.text=v;editorState[st.id]=st;editorSelected.dataset.editorText=v;const directText=[...editorSelected.childNodes].find(n=>n.nodeType===Node.TEXT_NODE&&n.textContent.trim());if(directText){directText.textContent=v}else if(editorSelected.childElementCount===0){editorSelected.textContent=v}else{editorSelected.innerText=v}editorSave();editorRefreshHandles()}
+function editorReset(){if(!editorSelected)return;const id=editorId(editorSelected);delete editorState[id];editorSelected.style.removeProperty('--edit-x');editorSelected.style.removeProperty('--edit-y');editorSelected.style.removeProperty('--edit-s');editorSelected.style.removeProperty('--edit-r');editorSelected.classList.remove('editorTarget');editorSelect(editorSelected)}
+function editorResetAll(){editorState={};localStorage.removeItem(EDITOR_KEY);document.querySelectorAll('.editorTarget').forEach(el=>{el.style.removeProperty('--edit-x');el.style.removeProperty('--edit-y');el.style.removeProperty('--edit-s');el.style.removeProperty('--edit-r');el.classList.remove('editorTarget','editorSelected','editorTextTarget')});editorRemoveSelection()}
+function editorExport(){const payload={version:1,stage:'Switchie',exportedAt:new Date().toISOString(),elements:editorState};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='switchie-layout.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function editorImport(file){if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const p=JSON.parse(rd.result);editorState=p.elements||p||{};editorSave();editorApplyAll();toast('Layout imported')}catch(e){toast('Invalid layout JSON')}};rd.readAsText(file)}
+function editorToggle(on=!editorOn){editorOn=on;document.documentElement.classList.toggle('editorOn',editorOn);$('editToolbar').classList.toggle('open',editorOn);$('editHint').classList.toggle('open',editorOn);if(editorOn){editorLoad();editorApplyAll()}else editorRemoveSelection()}
+function editorInit(){editorLoad();$('editDone').onclick=()=>editorToggle(false);$('editExport').onclick=editorExport;$('editImport').onclick=()=>$('editFile').click();$('editFile').onchange=e=>editorImport(e.target.files[0]);$('editReset').onclick=editorReset;$('editResetAll').onclick=editorResetAll;$('editToggleText').onclick=editorOpenText;$('editTextApply').onclick=editorApplyText;$('editTextCancel').onclick=()=>$('editTextPanel').classList.remove('open');$('game').addEventListener('pointerdown',e=>{if(!editorOn)return;if(e.target.closest('#editToolbar,#editTextPanel,#editorHandles'))return;let el=e.target;while(el&&el!==$('game')&&!editorEligible(el))el=el.parentElement;if(editorEligible(el)){editorSelect(el);editorStartMove(e)}else editorRemoveSelection()});$('game').addEventListener('dblclick',e=>{if(!editorOn)return;if(editorSelected&&editorSelected.contains(e.target))editorOpenText()});$('editorHandles').addEventListener('pointerdown',e=>{const h=e.target.closest('.editorHandle,.editorRotate');if(!h||!editorSelected)return;const type=h.dataset.handle;if(type==='rotate')editorStartRotate(e);else editorStartScale(e,type)});window.addEventListener('resize',()=>editorRefreshHandles());const b=document.createElement('button');b.id='editorLaunch';b.type='button';b.textContent='✎ Edit Layout';b.title='Open the visual layout editor (Alt+E)';b.style.cssText='position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:9000;display:none;background:linear-gradient(145deg,#1b211c,#090e0b);border:1px solid #d6b15d99;color:#f2dfaa;border-radius:8px;padding:8px 12px;font-size:11px;box-shadow:0 8px 18px #0009';document.body.appendChild(b);b.onclick=()=>editorToggle(true);window.addEventListener('keydown',e=>{if(e.key==='Escape'&&editorOn)editorToggle(false);if(e.key==='e'&&e.altKey&&$('game').style.display!=='none')editorToggle(!editorOn)});const obs=new MutationObserver(()=>{if(editorOn)requestAnimationFrame(editorApplyAll)});obs.observe($('game'),{childList:true,subtree:true});window.showEditorButton=()=>{b.style.display='block'};window.hideEditorButton=()=>{b.style.display='none'};if($('game').style.display!=='none')window.showEditorButton();editorInitDone=true}
+let editorInitDone=false;
+editorInit();
+
+</script>
 <style>
 :root{
   --felt:#064531;--felt2:#032d22;--felt3:#011a13;
@@ -318,7 +351,7 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 /* ===== FINAL MOCKUP OVERLAY / 16:9 STAGE ===== */
 html,body{background:#050302;overflow:hidden}
 .app{display:grid;place-items:center;width:100vw;height:100vh;padding:0;background:#050302}
-.table{width:100vw;height:min(56.25vw,100vh);max-height:100vh;aspect-ratio:16/9;padding:0;border-radius:0;overflow:hidden;background:#07110d url('/table-background.png') center center/cover no-repeat;box-shadow:none}
+.table{width:100vw;height:min(56.25vw,100vh);max-height:100vh;aspect-ratio:16/9;padding:0;border-radius:0;overflow:hidden;background:#07110d url('table-background.png') center center/cover no-repeat;box-shadow:none}
 .table:before,.table:after{display:none}
 .feltWrap{inset:0;border-radius:0;background:transparent;box-shadow:none;z-index:1}
 .feltWrap:before,.feltWrap:after{display:none}
@@ -382,6 +415,108 @@ html,body{background:#050302;overflow:hidden}
 .drawTransitHide{visibility:hidden!important}
 @media(max-aspect-ratio:16/9){.table{width:177.7778vh;height:100vh}}
 
+
+
+/* ===== FINAL VISUAL PASS ===== */
+.app{background:#050302 url('table-background.png') center center/cover no-repeat;}
+.table{background:transparent;box-shadow:none;border-radius:0;padding:0}
+.table:after,.table:before{display:none}
+.feltWrap{background:transparent;box-shadow:none;inset:0;}
+.feltWrap:before,.feltWrap:after{display:none}
+.shell{padding:0;grid-template-rows:16% 1fr 25%;gap:0}
+.header{grid-template-columns:20% 1fr 16%;padding:0 1.2%;}
+.brand{padding:0}
+.logo{font-size:clamp(46px,5vw,76px);}
+.topOpps{gap:1.2%;padding:1.2% 2% 0;align-items:flex-start}
+.opp{width:145px;min-width:145px;flex:0 1 145px;padding:8px 10px}
+.topOpps:has(.opp:only-child) .opp{width:180px;min-width:180px;flex-basis:180px}
+.roomMenu{right:0;top:1.5%;width:15.5%}
+.content{inset:0}
+.leftCol{left:1.3%;top:22%;width:19%;height:57%;}
+.logPanel{height:67%}
+.chatPanel{height:30%;margin-top:3%}
+.rightCol{right:1.3%;top:28%;width:23.5%;height:56%;padding:0;display:flex;flex-direction:column;gap:14px;pointer-events:none}
+.rightCol .panel{pointer-events:auto}
+.ability{height:102px;min-height:102px;flex:0 0 102px;padding:13px !important}
+.values{height:auto;min-height:0;flex:0 0 auto;padding:13px !important}
+.valuesText{font-size:clamp(7px,.56vw,10px);line-height:1.32}
+.knockPanel{position:absolute;right:0;bottom:-20%;width:36%;height:42px;min-height:42px;padding:0 !important;pointer-events:none}
+.knockBtn{height:42px;width:100%;min-height:42px;font-size:clamp(10px,.75vw,13px);border-radius:8px;padding:6px 10px}
+.center{inset:0}
+.statusPill{top:22%;font-size:clamp(10px,.7vw,14px)}
+.drawTimer{top:27%;left:54%;transform:translateX(-50%);font-size:clamp(10px,.7vw,14px);z-index:250}
+.piles{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);gap:5.4vw;}
+.stack{width:6.4vw;height:8.6vw;max-width:104px;max-height:132px;transform:perspective(700px) rotateX(8deg) rotateZ(-3deg);transform-origin:center bottom;}
+.pileGroup:nth-child(2) .stack{transform:perspective(700px) rotateX(8deg) rotateZ(2deg)}
+.stack .card:nth-child(1){transform:translate(13px,13px) rotateZ(1deg)}
+.stack .card:nth-child(2){transform:translate(9px,9px) rotateZ(-.5deg)}
+.stack .card:nth-child(3){transform:translate(5px,5px)}
+.stack .card:nth-child(4){transform:translate(0,0)}
+.pileLabel{margin-top:10px;font-size:clamp(12px,.9vw,17px)}
+.centerAction{bottom:23%;left:50%;z-index:2400}
+.centerAction.drawnMode .caPrompt{order:0;}
+.caButtons button,.caButtons .goldBtn,.caButtons .primary,.caButtons .ghost{background:linear-gradient(145deg,rgba(7,15,12,.96),rgba(1,6,5,.96));border:1px solid rgba(224,188,97,.58);color:#f2dfaa;box-shadow:0 8px 18px #0009,inset 0 1px rgba(255,255,255,.08)}
+.caButtons button:hover:not(:disabled){background:linear-gradient(145deg,rgba(31,35,26,.98),rgba(7,11,8,.98));border-color:#f1d47a}
+.caPrompt{background:rgba(3,10,8,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-color:rgba(224,188,97,.7)}
+.bottom{left:19%;right:19%;bottom:0;height:27%;padding:0;}
+.bottom:before{left:0;right:0;top:0;bottom:-4px}
+.bottom:after{left:1.6%;right:1.6%;top:17px;bottom:2px}
+.bottom>div:first-child{display:block;position:absolute;left:11%;top:7%;bottom:auto;z-index:5}
+.youTitle{font-size:clamp(15px,1.25vw,24px);}
+.youCount{font-size:clamp(8px,.58vw,11px)}
+.hand{position:absolute;left:12%;right:12%;bottom:16%;height:64%;gap:clamp(7px,.6vw,11px);transform:none;align-items:center;}
+.slot{width:5.1vw;height:7.25vw;max-width:82px;max-height:116px}
+.slot:nth-child(1){transform:rotate(-5deg) translateY(0)}
+.slot:nth-child(2){transform:rotate(-1.7deg) translateY(-2px)}
+.slot:nth-child(3){transform:rotate(1.7deg) translateY(-2px)}
+.slot:nth-child(4){transform:rotate(5deg) translateY(0)}
+.slot.throwable:hover{transform:translateY(-12px) scale(1.045) !important}
+/* Put card-specific controls to the right of the card, never below it. */
+.centerAction.drawnMode{display:grid;grid-template-columns:auto minmax(170px,230px);grid-template-rows:auto;gap:12px;align-items:center;justify-content:center;}
+.centerAction.drawnMode .caCardWrap{grid-column:1;grid-row:1}
+.centerAction.drawnMode .caSide{grid-column:2;grid-row:1;min-width:180px}
+.centerAction.drawnMode .caButtons{width:100%;max-width:none}
+.centerAction.drawnMode .caButtons button{width:100%}
+.caCardWrap .card{width:86px;height:120px}
+.footerRule,.footerPill{display:none}
+/* Click safety: the stage background never intercepts clicks on cards/actions. */
+.stage{pointer-events:none}
+.stage > *{pointer-events:auto}
+.piles,.drawTimer,.statusPill,.centerAction{pointer-events:auto}
+.hand,.slot{pointer-events:auto}
+.rightCol,.roomMenu,.leftCol,.topOpps{pointer-events:auto}
+
+
+/* ===== Visual Layout Editor ===== */
+#editToolbar{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:10000;display:none;align-items:center;gap:7px;padding:7px 9px;background:rgba(3,7,6,.96);border:1px solid rgba(224,188,97,.72);border-radius:12px;box-shadow:0 12px 35px #000c,inset 0 1px #fff2;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);font-size:11px}
+#editToolbar.open{display:flex}
+#editToolbar button{min-height:30px;padding:5px 9px;font-size:10px}
+#editToolbar .editSep{width:1px;height:22px;background:#d6b15d44;margin:0 2px}
+#editToolbar .editLabel{color:#e9d493;font-weight:700;letter-spacing:.6px}
+#editHint{position:fixed;left:50%;top:59px;transform:translateX(-50%);z-index:10000;display:none;color:#e8dbb4;background:rgba(2,7,5,.9);border:1px solid #d6b15d55;border-radius:999px;padding:5px 10px;font-size:9px;pointer-events:none}
+#editHint.open{display:block}
+.editorTarget{cursor:move!important;outline:1px dashed rgba(255,222,128,.18)!important;outline-offset:2px;translate:calc(var(--edit-x,0px)) calc(var(--edit-y,0px));rotate:var(--edit-r,0deg);scale:var(--edit-s,1)}
+.editorTarget.editorSelected{outline:1px solid #ffe19a!important;outline-offset:3px;box-shadow:0 0 0 1px #9b742e55,0 0 24px #f4d56b24!important}
+.editorTarget.editorTextTarget{cursor:text!important}
+.editorHandles{position:fixed;z-index:10001;display:none;pointer-events:none}
+.editorHandles.open{display:block}
+.editorBox{position:absolute;inset:0;border:1px solid #ffe39a;box-shadow:0 0 0 1px #5a4117,0 0 18px #d5ad4a22}
+.editorHandle{position:absolute;width:12px;height:12px;border:1px solid #fff1bf;background:#8e6925;border-radius:3px;box-shadow:0 2px 7px #000;pointer-events:auto;cursor:nwse-resize}
+.editorHandle.nw{left:-7px;top:-7px}.editorHandle.ne{right:-7px;top:-7px;cursor:nesw-resize}.editorHandle.sw{left:-7px;bottom:-7px;cursor:nesw-resize}.editorHandle.se{right:-7px;bottom:-7px}
+.editorRotate{position:absolute;left:50%;top:-40px;width:12px;height:12px;transform:translateX(-50%);border:1px solid #fff1bf;background:#d5ad4a;border-radius:50%;pointer-events:auto;cursor:grab;box-shadow:0 2px 7px #000}.editorRotate:after{content:"";position:absolute;left:50%;top:11px;width:1px;height:28px;background:#ffe19a99}
+#editTextPanel{position:fixed;right:14px;top:14px;width:250px;z-index:10000;display:none;padding:10px;background:rgba(3,7,6,.96);border:1px solid rgba(224,188,97,.72);border-radius:12px;box-shadow:0 12px 35px #000c;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+#editTextPanel.open{display:block}#editTextPanel .editTextTitle{font:700 14px Georgia,serif;color:#f1d99c;margin-bottom:7px}#editTextPanel textarea{width:100%;min-height:72px;resize:vertical;background:#020705;color:#f6edd7;border:1px solid #d6b15d66;border-radius:7px;padding:7px;font-size:12px}#editTextPanel .editTextRow{display:flex;gap:6px;margin-top:7px}#editTextPanel button{flex:1}
+#editorOverlay{position:fixed;inset:0;z-index:9999;display:none;pointer-events:none}.editorOn #editorOverlay{display:block}
+.editorOn .editorTarget{pointer-events:auto!important}
+.editorOn .stage{pointer-events:auto!important}.editorOn .stage>*{pointer-events:auto!important}
+.editorOn #game{user-select:none}.editorOn input,.editorOn textarea,.editorOn select{user-select:text}
+.editorOn .editorTarget [data-editor-ignore]{pointer-events:none!important}
+
+
+/* ===== Full background framing ===== */
+.app{display:grid;place-items:center;width:100vw;height:100vh;padding:0;background:#050302;overflow:hidden}
+.table{width:min(100vw,177.7778vh);height:min(56.25vw,100vh);max-width:100vw;max-height:100vh;aspect-ratio:16/9;background:#07110d url('table-background.png') center center/contain no-repeat;position:relative}
+
 </style>
 </head>
 <body>
@@ -434,7 +569,7 @@ html,body{background:#050302;overflow:hidden}
         </aside>
       </div>
       <footer class="bottom">
-        <div><div class="youTitle">You</div><div id="youCount" class="youCount">4 cards</div></div>
+        <div><div id="youTitle" class="youTitle">Player</div><div id="youCount" class="youCount">4 cards</div></div>
         <div id="hand" class="hand"></div>
         <div class="footerRule">Your positions never move.<br>A successful throw removes the card.<br>A wrong throw adds two cards.</div>
         <div class="footerPill">HIDDEN INFORMATION. REAL FRIENDSHIPS.</div>
@@ -442,8 +577,20 @@ html,body{background:#050302;overflow:hidden}
     </div>
   </div>
 </div>
+
+<div id="editToolbar" aria-label="Switchie layout editor">
+  <span class="editLabel">EDIT MODE</span><span id="editSelectionName" class="editLabel" style="opacity:.65">Nothing selected</span><span class="editSep"></span>
+  <button id="editToggleText" type="button">Edit Text</button><button id="editReset" type="button">Reset Selected</button><button id="editResetAll" type="button">Reset All</button><span class="editSep"></span>
+  <button id="editImport" type="button">Import</button><button id="editExport" type="button" class="goldBtn">Export Layout</button><button id="editDone" type="button" class="primary">Done</button>
+  <input id="editFile" type="file" accept="application/json" style="display:none">
+</div>
+<div id="editHint">Drag = move · corner = scale · gold dot = rotate · double-click text = edit</div>
+<div id="editTextPanel"><div class="editTextTitle">Edit text</div><textarea id="editTextArea"></textarea><div class="editTextRow"><button id="editTextApply" class="goldBtn" type="button">Apply</button><button id="editTextCancel" type="button">Cancel</button></div></div>
+<div id="editorOverlay"><div id="editorHandles" class="editorHandles"><div class="editorBox"></div><div class="editorHandle nw" data-handle="nw"></div><div class="editorHandle ne" data-handle="ne"></div><div class="editorHandle sw" data-handle="sw"></div><div class="editorHandle se" data-handle="se"></div><div class="editorRotate" data-handle="rotate" title="Rotate"></div></div></div>
 <div id="modalHost" class="modalHost"></div><div id="toast" class="toast"></div>
 <script>
+const DEMO_MODE=new URLSearchParams(location.search).get('demo')==='1';
+if(DEMO_MODE && typeof io==='undefined'){ window.io=()=>({on(){},emit(){},}) }
 const socket=io({autoConnect:true});
 const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 let actionStatus='',actionStatusTimer=null;
@@ -630,8 +777,10 @@ function renderCenterAction(){
 }
 function render(){
   if(!state)return;
+  if(window.showEditorButton)window.showEditorButton();
   $('lobby').style.display='none';$('game').style.display='block';$('roomCode').textContent=state.code;
   $('statusPill').textContent=statusText();
+  const me=mine(); $('youTitle').textContent=me?.name||'Player';
   $('roomTitle').textContent=state.title&&state.title!==state.code?state.title:'Private Table';
   renderOpponents();renderDeck();renderHand();renderAbility();renderLog();renderChat();renderCenterAction();renderThrowRing();renderDrawTimer();
   const canKnock=myTurn()&&!state.drawn&&!state.knocked&&!state.ended&&mode==='idle';
@@ -778,5 +927,18 @@ socket.on('connect',()=>{const q=new URLSearchParams(location.search).get('room'
 socket.on('reveal',x=>revealCard(x.kind==='own'?'Your card':x.kind==='king'?'King · cards revealed':'Queen · cards revealed',x.cards,!!x.canSwitch));
 socket.on('publicReveal',x=>{showModal(`<div class="modal"><div class="modalTitle">Wrong throw</div><div class="modalSub">${esc(x.name)} threw a non-matching card. Everyone sees the reveal.</div><div class="revealGrid">${card(x.thrown,false,'cardEnter')}${card(x.pile,false,'cardEnter')}</div><div class="timerBar"></div></div>`);setTimeout(closeModal,4000)});
 if(new URLSearchParams(location.search).get('room'))$('code').value=new URLSearchParams(location.search).get('room').toUpperCase();
+if(DEMO_MODE){
+  state={
+    code:'5B7759',title:'Private Table',hostId:'demo-me',started:true,turn:0,knocked:false,finalTurns:0,ended:false,winner:null,
+    pileTop:{r:'K',s:'H'},deckCount:37,drawn:null,players:[
+      {id:'demo-me',name:'Nico',ai:false,connected:true,handCount:4},
+      {id:'demo-maya',name:'Maya',ai:true,connected:true,handCount:2}
+    ],logs:['Game started.','Maya used King and switched two inspected cards.','Maya drew a card.','Nico replaced position 3.','Maya correctly threw 9H.','Nico used 8 to look at position 2.','Nico drew a card.'],scores:null,pendingKing:null,
+    throwOpen:false,throwUntil:0,drawPendingPlayerId:'demo-me',drawPhase:'waiting',drawDeadline:Date.now()+15000,abilityPending:null,playerId:'demo-me',
+    chat:[{id:'1',from:'Maya',text:'Good luck!',time:new Date().toISOString(),kind:'room'}]
+  };
+  render();
+}
+
 </script>
 </body></html>
