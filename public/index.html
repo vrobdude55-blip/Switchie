@@ -4,40 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Switchie</title>
-<script src="/socket.io/socket.io.js">
-/* ===== Layout editor logic ===== */
-const EDITOR_KEY='switchie-layout-v1';
-let editorOn=false,editorSelected=null,editorDrag=null,editorState={};
-const EDITOR_EXCLUDE=new Set(['editToolbar','editHint','editTextPanel','editorOverlay','modalHost','toast','lobby']);
-function editorId(el){if(!el||el===document.body||el===document.documentElement)return null;if(el.id)return '#'+el.id;const parts=[];let n=el;while(n&&n!==$('game')){let tag=n.tagName.toLowerCase(),i=1;let sib=n.previousElementSibling;while(sib){if(sib.tagName===n.tagName)i++;sib=sib.previousElementSibling}parts.unshift(`${tag}:nth-of-type(${i})`);n=n.parentElement}return '#game>'+parts.join('>')}
-function editorLabel(el){if(!el)return 'Nothing selected';let t=(el.innerText||el.textContent||el.id||el.className||'Element').trim().replace(/\s+/g,' ');return t.slice(0,32)||el.id||'Element'}
-function editorEligible(el){if(!el||!(el instanceof HTMLElement)||!$('game')?.contains(el))return false;if(EDITOR_EXCLUDE.has(el.id))return false;if(el.closest('#editToolbar,#editHint,#editTextPanel,#editorOverlay,#modalHost,#toast'))return false;if(el===document.querySelector('.table')||el===document.querySelector('.shell')||el===document.querySelector('.content')||el===document.querySelector('.center')||el===document.querySelector('.stage'))return false;return true}
-function editorGet(el){const id=editorId(el);if(!id)return null;return editorState[id]||{id,text:null,x:0,y:0,s:1,r:0,label:editorLabel(el)} }
-function editorApply(el){const st=editorGet(el);el.classList.add('editorTarget');el.style.setProperty('--edit-x',`${st.x||0}px`);el.style.setProperty('--edit-y',`${st.y||0}px`);el.style.setProperty('--edit-s',`${st.s||1}`);el.style.setProperty('--edit-r',`${st.r||0}deg`);if(st.text!=null && el.childElementCount===0)el.textContent=st.text}
-function editorApplyAll(){document.querySelectorAll('#game *').forEach(el=>{if(editorEligible(el)){const id=editorId(el);if(editorState[id])editorApply(el)}});editorRefreshHandles()}
-function editorSave(){try{localStorage.setItem(EDITOR_KEY,JSON.stringify(editorState))}catch(e){}}
-function editorLoad(){try{const raw=localStorage.getItem(EDITOR_KEY);if(raw)editorState=JSON.parse(raw)||{}}catch(e){editorState={}}}
-function editorRemoveSelection(){if(editorSelected){editorSelected.classList.remove('editorSelected','editorTextTarget');editorSelected=null}$('editorHandles').classList.remove('open');$('editTextPanel').classList.remove('open');$('editSelectionName').textContent='Nothing selected'}
-function editorSelect(el){if(!editorEligible(el))return;editorRemoveSelection();editorSelected=el;editorApply(el);el.classList.add('editorSelected');if((el.childElementCount===0 || /^[^<>]+$/.test(el.textContent||'')) && (el.textContent||'').trim())el.classList.add('editorTextTarget');$('editSelectionName').textContent=editorLabel(el);editorRefreshHandles()}
-function editorRefreshHandles(){const h=$('editorHandles');if(!editorSelected||!editorOn){h.classList.remove('open');return}const r=editorSelected.getBoundingClientRect();h.style.left=`${r.left}px`;h.style.top=`${r.top}px`;h.style.width=`${r.width}px`;h.style.height=`${r.height}px`;h.classList.add('open')}
-function editorUpdate(){if(!editorSelected)return;const st=editorGet(editorSelected);editorState[st.id]=st;editorApply(editorSelected);editorRefreshHandles();editorSave()}
-function editorStartMove(e){if(!editorOn||!editorSelected||e.target.closest('.editorHandle,.editorRotate'))return;if(e.button!==undefined&&e.button!==0)return;e.preventDefault();e.stopPropagation();const st=editorGet(editorSelected);editorDrag={type:'move',sx:e.clientX,sy:e.clientY,x:st.x||0,y:st.y||0};window.addEventListener('pointermove',editorPointerMove);window.addEventListener('pointerup',editorPointerUp,{once:true})}
-function editorStartScale(e,handle){if(!editorSelected)return;e.preventDefault();e.stopPropagation();const r=editorSelected.getBoundingClientRect(),st=editorGet(editorSelected);editorDrag={type:'scale',sx:e.clientX,sy:e.clientY,w:r.width,h:r.height,s:st.s||1,handle,baseW:r.width,baseH:r.height};window.addEventListener('pointermove',editorPointerMove);window.addEventListener('pointerup',editorPointerUp,{once:true})}
-function editorStartRotate(e){if(!editorSelected)return;e.preventDefault();e.stopPropagation();const r=editorSelected.getBoundingClientRect(),st=editorGet(editorSelected);editorDrag={type:'rotate',cx:r.left+r.width/2,cy:r.top+r.height/2,startAngle:Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))*180/Math.PI,r:st.r||0};window.addEventListener('pointermove',editorPointerMove);window.addEventListener('pointerup',editorPointerUp,{once:true})}
-function editorPointerMove(e){if(!editorSelected||!editorDrag)return;const st=editorGet(editorSelected);if(editorDrag.type==='move'){st.x=editorDrag.x+(e.clientX-editorDrag.sx);st.y=editorDrag.y+(e.clientY-editorDrag.sy)}else if(editorDrag.type==='scale'){const dx=e.clientX-editorDrag.sx,dy=e.clientY-editorDrag.sy;let delta=(Math.abs(dx)>Math.abs(dy)?dx:dy);if(editorDrag.handle==='nw'||editorDrag.handle==='sw')delta=-delta;const factor=Math.max(.15,Math.min(5,editorDrag.s*(1+delta/Math.max(80,editorDrag.baseW))));st.s=factor}else if(editorDrag.type==='rotate'){const a=Math.atan2(e.clientY-editorDrag.cy,e.clientX-editorDrag.cx)*180/Math.PI;st.r=Math.round((editorDrag.r+a-editorDrag.startAngle)*10)/10}editorState[st.id]=st;editorApply(editorSelected);editorRefreshHandles()}
-function editorPointerUp(){editorDrag=null;editorSave()}
-function editorOpenText(){if(!editorSelected)return;const txt=editorSelected.dataset.editorText!=null?editorSelected.dataset.editorText:(editorSelected.innerText||editorSelected.textContent||'').trim();$('editTextArea').value=txt;$('editTextPanel').classList.add('open');$('editTextArea').focus()}
-function editorApplyText(){if(!editorSelected)return;const v=$('editTextArea').value;const st=editorGet(editorSelected);st.text=v;editorState[st.id]=st;editorSelected.dataset.editorText=v;const directText=[...editorSelected.childNodes].find(n=>n.nodeType===Node.TEXT_NODE&&n.textContent.trim());if(directText){directText.textContent=v}else if(editorSelected.childElementCount===0){editorSelected.textContent=v}else{editorSelected.innerText=v}editorSave();editorRefreshHandles()}
-function editorReset(){if(!editorSelected)return;const id=editorId(editorSelected);delete editorState[id];editorSelected.style.removeProperty('--edit-x');editorSelected.style.removeProperty('--edit-y');editorSelected.style.removeProperty('--edit-s');editorSelected.style.removeProperty('--edit-r');editorSelected.classList.remove('editorTarget');editorSelect(editorSelected)}
-function editorResetAll(){editorState={};localStorage.removeItem(EDITOR_KEY);document.querySelectorAll('.editorTarget').forEach(el=>{el.style.removeProperty('--edit-x');el.style.removeProperty('--edit-y');el.style.removeProperty('--edit-s');el.style.removeProperty('--edit-r');el.classList.remove('editorTarget','editorSelected','editorTextTarget')});editorRemoveSelection()}
-function editorExport(){const payload={version:1,stage:'Switchie',exportedAt:new Date().toISOString(),elements:editorState};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='switchie-layout.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function editorImport(file){if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const p=JSON.parse(rd.result);editorState=p.elements||p||{};editorSave();editorApplyAll();toast('Layout imported')}catch(e){toast('Invalid layout JSON')}};rd.readAsText(file)}
-function editorToggle(on=!editorOn){editorOn=on;document.documentElement.classList.toggle('editorOn',editorOn);$('editToolbar').classList.toggle('open',editorOn);$('editHint').classList.toggle('open',editorOn);if(editorOn){editorLoad();editorApplyAll()}else editorRemoveSelection()}
-function editorInit(){editorLoad();$('editDone').onclick=()=>editorToggle(false);$('editExport').onclick=editorExport;$('editImport').onclick=()=>$('editFile').click();$('editFile').onchange=e=>editorImport(e.target.files[0]);$('editReset').onclick=editorReset;$('editResetAll').onclick=editorResetAll;$('editToggleText').onclick=editorOpenText;$('editTextApply').onclick=editorApplyText;$('editTextCancel').onclick=()=>$('editTextPanel').classList.remove('open');$('game').addEventListener('pointerdown',e=>{if(!editorOn)return;if(e.target.closest('#editToolbar,#editTextPanel,#editorHandles'))return;let el=e.target;while(el&&el!==$('game')&&!editorEligible(el))el=el.parentElement;if(editorEligible(el)){editorSelect(el);editorStartMove(e)}else editorRemoveSelection()});$('game').addEventListener('dblclick',e=>{if(!editorOn)return;if(editorSelected&&editorSelected.contains(e.target))editorOpenText()});$('editorHandles').addEventListener('pointerdown',e=>{const h=e.target.closest('.editorHandle,.editorRotate');if(!h||!editorSelected)return;const type=h.dataset.handle;if(type==='rotate')editorStartRotate(e);else editorStartScale(e,type)});window.addEventListener('resize',()=>editorRefreshHandles());const b=document.createElement('button');b.id='editorLaunch';b.type='button';b.textContent='✎ Edit Layout';b.title='Open the visual layout editor (Alt+E)';b.style.cssText='position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:9000;display:none;background:linear-gradient(145deg,#1b211c,#090e0b);border:1px solid #d6b15d99;color:#f2dfaa;border-radius:8px;padding:8px 12px;font-size:11px;box-shadow:0 8px 18px #0009';document.body.appendChild(b);b.onclick=()=>editorToggle(true);window.addEventListener('keydown',e=>{if(e.key==='Escape'&&editorOn)editorToggle(false);if(e.key==='e'&&e.altKey&&$('game').style.display!=='none')editorToggle(!editorOn)});const obs=new MutationObserver(()=>{if(editorOn)requestAnimationFrame(editorApplyAll)});obs.observe($('game'),{childList:true,subtree:true});window.showEditorButton=()=>{b.style.display='block'};window.hideEditorButton=()=>{b.style.display='none'};if($('game').style.display!=='none')window.showEditorButton();editorInitDone=true}
-let editorInitDone=false;
-editorInit();
-
-</script>
+<script src="/socket.io/socket.io.js"></script>
 <style>
 :root{
   --felt:#064531;--felt2:#032d22;--felt3:#011a13;
@@ -296,7 +263,7 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 .card.tiny .corner{font-size:8px;line-height:7px}
 .card.tiny .suit{font-size:18px}
 
-.fly{position:fixed;z-index:1000;pointer-events:none;animation:fly .72s cubic-bezier(.18,.82,.25,1) forwards;transform-origin:center}
+.fly{position:fixed;z-index:1000;pointer-events:none;transform-origin:center;will-change:transform,opacity}
 .fly.smoothDraw{animation:flyDraw 1.05s cubic-bezier(.18,.82,.25,1) forwards}.fly.remoteAction{animation:remoteAction .8s cubic-bezier(.18,.82,.25,1) forwards}.drawTransitHide{visibility:hidden!important}.actionPing{animation:actionPing .7s ease-out}
 .fly .card{width:72px;height:101px}
 .pop{animation:pilePop .45s ease}
@@ -351,7 +318,7 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 /* ===== FINAL MOCKUP OVERLAY / 16:9 STAGE ===== */
 html,body{background:#050302;overflow:hidden}
 .app{display:grid;place-items:center;width:100vw;height:100vh;padding:0;background:#050302}
-.table{width:100vw;height:min(56.25vw,100vh);max-height:100vh;aspect-ratio:16/9;padding:0;border-radius:0;overflow:hidden;background:#07110d url('table-background.png') center center/cover no-repeat;box-shadow:none}
+.table{width:min(100vw,177.7778vh);height:min(56.25vw,100vh);max-width:100vw;max-height:100vh;aspect-ratio:16/9;padding:0;border-radius:0;overflow:hidden;background:#07110d url('table-background.png') center center/contain no-repeat;box-shadow:none}
 .table:before,.table:after{display:none}
 .feltWrap{inset:0;border-radius:0;background:transparent;box-shadow:none;z-index:1}
 .feltWrap:before,.feltWrap:after{display:none}
@@ -411,14 +378,17 @@ html,body{background:#050302;overflow:hidden}
 .miniBack{width:2.25vw;height:3.15vw;max-width:34px;max-height:48px}
 
 /* Draw animation: real deck-to-hand motion, calculated from live DOM geometry. */
-.fly.smoothDraw{animation:flyDraw 1.05s cubic-bezier(.18,.82,.25,1) forwards;will-change:transform,opacity;backface-visibility:hidden;transform:translate3d(0,0,0)}
+.fly.smoothDraw{backface-visibility:hidden;transform:translate3d(0,0,0)}
+.simpleCardMotion{opacity:0;transform:translate3d(0,0,0) rotate(-2deg) scale(.96);transition:transform .62s cubic-bezier(.2,.75,.2,1),opacity .18s ease}.simpleCardMotion.moving{opacity:1;transform:translate3d(var(--tx),var(--ty),0) rotate(2deg) scale(1)}
+.remoteHeldCard{position:fixed;z-index:1200;width:72px;height:101px;pointer-events:none;filter:drop-shadow(0 10px 14px #000a);animation:heldFloat 2.4s ease-in-out infinite}
+@keyframes heldFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-7px) rotate(2deg)}}
 .drawTransitHide{visibility:hidden!important}
-@media(max-aspect-ratio:16/9){.table{width:177.7778vh;height:100vh}}
+
 
 
 
 /* ===== FINAL VISUAL PASS ===== */
-.app{background:#050302 url('table-background.png') center center/cover no-repeat;}
+.app{background:#050302;}
 .table{background:transparent;box-shadow:none;border-radius:0;padding:0}
 .table:after,.table:before{display:none}
 .feltWrap{background:transparent;box-shadow:none;inset:0;}
@@ -445,14 +415,36 @@ html,body{background:#050302;overflow:hidden}
 .center{inset:0}
 .statusPill{top:22%;font-size:clamp(10px,.7vw,14px)}
 .drawTimer{top:27%;left:54%;transform:translateX(-50%);font-size:clamp(10px,.7vw,14px);z-index:250}
-.piles{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);gap:5.4vw;}
-.stack{width:6.4vw;height:8.6vw;max-width:104px;max-height:132px;transform:perspective(700px) rotateX(8deg) rotateZ(-3deg);transform-origin:center bottom;}
-.pileGroup:nth-child(2) .stack{transform:perspective(700px) rotateX(8deg) rotateZ(2deg)}
-.stack .card:nth-child(1){transform:translate(13px,13px) rotateZ(1deg)}
-.stack .card:nth-child(2){transform:translate(9px,9px) rotateZ(-.5deg)}
-.stack .card:nth-child(3){transform:translate(5px,5px)}
-.stack .card:nth-child(4){transform:translate(0,0)}
-.pileLabel{margin-top:10px;font-size:clamp(12px,.9vw,17px)}
+/* ===== TOP-DOWN CASINO CARD GEOMETRY ===== */
+/* The reference composition places the draw pile on the left, discard pile near center,
+   and the timer/instruction panel immediately to the right of the discard pile. */
+.piles{position:absolute;left:40%;top:37.5%;transform:translate(-50%,-50%);gap:12vw;align-items:flex-start;}
+.stack{width:6.4vw;height:8.6vw;max-width:104px;max-height:132px;transform-style:preserve-3d;perspective:1200px;transform-origin:center center;filter:drop-shadow(7px 11px 12px rgba(0,0,0,.55));}
+.pileGroup:nth-child(1) .stack{transform:perspective(1200px) rotateX(7deg) rotateZ(5deg);}
+.pileGroup:nth-child(2) .stack{transform:perspective(1200px) rotateX(5deg) rotateZ(1deg);}
+/* Multiple physical card layers make the deck/discard pile read as real stacked cards. */
+.pileGroup .stack .card:nth-child(1){transform:translate(15px,15px) rotateZ(1.4deg);filter:brightness(.42)}
+.pileGroup .stack .card:nth-child(2){transform:translate(12px,12px) rotateZ(.8deg);filter:brightness(.50)}
+.pileGroup .stack .card:nth-child(3){transform:translate(9px,9px) rotateZ(.35deg);filter:brightness(.60)}
+.pileGroup .stack .card:nth-child(4){transform:translate(6px,6px) rotateZ(0deg);filter:brightness(.70)}
+.pileGroup .stack .card:nth-child(5){transform:translate(3px,3px) rotateZ(-.35deg);filter:brightness(.82)}
+.pileGroup .stack .card:nth-child(6){transform:translate(0,0) rotateZ(0deg);filter:none}
+.pileLabel{margin-top:12px;font-size:clamp(12px,.9vw,17px)}
+
+/* Reference-style top-down hand: broad, physical cards with subtle individual rotations. */
+.hand{perspective:1400px;transform-style:preserve-3d;}
+.hand .slot{transform-style:preserve-3d;transform-origin:center bottom;}
+.hand .slot:nth-child(1){transform:rotateX(3deg) rotateZ(-3deg) translateY(1px)}
+.hand .slot:nth-child(2){transform:rotateX(3deg) rotateZ(-1deg) translateY(-2px)}
+.hand .slot:nth-child(3){transform:rotateX(3deg) rotateZ(1deg) translateY(-2px)}
+.hand .slot:nth-child(4){transform:rotateX(3deg) rotateZ(2.5deg) translateY(0)}
+.hand .slot:nth-child(5){transform:rotateX(3deg) rotateZ(1deg) translateY(-1px)}
+.hand .slot:nth-child(6){transform:rotateX(3deg) rotateZ(-1deg) translateY(-1px)}
+.hand .slot:nth-child(7){transform:rotateX(3deg) rotateZ(2deg) translateY(0)}
+
+/* Timer/instruction card sits immediately to the right of the discard pile, like the reference. */
+.drawTimer{top:30.2%!important;left:66.8%!important;transform:translate(-50%,0)!important;min-width:190px!important;width:190px!important;}
+
 .centerAction{bottom:23%;left:50%;z-index:2400}
 .centerAction.drawnMode .caPrompt{order:0;}
 .caButtons button,.caButtons .goldBtn,.caButtons .primary,.caButtons .ghost{background:linear-gradient(145deg,rgba(7,15,12,.96),rgba(1,6,5,.96));border:1px solid rgba(224,188,97,.58);color:#f2dfaa;box-shadow:0 8px 18px #0009,inset 0 1px rgba(255,255,255,.08)}
@@ -515,9 +507,104 @@ html,body{background:#050302;overflow:hidden}
 
 /* ===== Full background framing ===== */
 .app{display:grid;place-items:center;width:100vw;height:100vh;padding:0;background:#050302;overflow:hidden}
-.table{width:min(100vw,177.7778vh);height:min(56.25vw,100vh);max-width:100vw;max-height:100vh;aspect-ratio:16/9;background:#07110d url('table-background.png') center center/contain no-repeat;position:relative}
+.table{width:100vw;height:100vh;max-width:none;max-height:none;aspect-ratio:auto;background:#07110d url('table-background.png') center center/100% 100% no-repeat;position:relative}
+
+
+/* ===== Final interaction/responsive fixes ===== */
+.knockPanel{pointer-events:auto!important;z-index:4000!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-end!important;gap:6px!important}
+.knockBtn{height:34px!important;min-height:34px!important}
+.bottom,.bottom:before,.bottom:after,#hand,#hand .slot{pointer-events:auto!important}
+.bottom:before,.bottom:after{pointer-events:none!important}
+#hand{z-index:50!important}
+#hand .slot{position:relative;z-index:60!important;touch-action:manipulation}
+#hand .slot .card{pointer-events:none}
+.centerAction,.centerAction *{pointer-events:auto!important}
+.caButtons,.caButtons button{position:relative;z-index:9999!important;pointer-events:auto!important}
+.stage{overflow:visible}
 
 </style>
+<style>
+/* ===== Face-card portraits + reference UI pass ===== */
+.card.printedFace{padding:3px;background:linear-gradient(145deg,#fffdf7,#e9e1d3);overflow:hidden}
+.card.printedFace .facePrint{position:absolute;left:13%;right:13%;bottom:10%;top:18%;width:74%;height:72%;object-fit:cover;object-position:center top;border-radius:3px;mix-blend-mode:multiply;filter:saturate(1.02) contrast(1.03);z-index:1}
+.card.printedFace .corner,.card.printedFace .suit{position:relative;z-index:3;text-shadow:0 1px 0 #fff}
+.card.printedFace .suit{display:none}
+.card.printedFace .rot{display:none}
+.card.printedFace:after{content:"";position:absolute;inset:4px;border:1px solid rgba(67,45,25,.22);border-radius:5px;pointer-events:none;z-index:4}
+
+/* Reference-style turn overlay */
+.drawTimer{top:28%!important;left:56%!important;transform:translateX(-50%)!important;min-width:190px!important;width:190px!important;padding:10px 14px 11px!important;border:1px solid rgba(225,178,75,.55)!important;border-radius:12px!important;background:linear-gradient(145deg,rgba(16,14,10,.94),rgba(4,6,5,.94))!important;box-shadow:0 12px 28px #000a,inset 0 1px rgba(255,255,255,.07)!important;color:#f7e6bb!important;display:none!important}
+.drawTimer.show{display:block!important}
+.turnTitle{font-size:clamp(11px,.85vw,15px);font-weight:500;text-align:center;margin-bottom:7px;color:#f2eadb}
+.timerCircle{width:76px;height:76px;margin:0 auto 8px;border-radius:50%;display:flex;align-items:center;justify-content:center;gap:3px;border:5px solid #9b7830;border-top-color:#f0d47e;border-right-color:#d8b85e;background:#090b09;box-shadow:inset 0 0 0 2px #17150e,0 0 0 1px rgba(255,211,116,.12)}
+.timerNum{font-size:clamp(26px,2vw,34px)!important;line-height:1;font-weight:700!important;margin:0!important;color:#f7f1e5!important}
+.timerUnit{font-size:12px;color:#d4c8ae;align-self:flex-end;margin-bottom:12px}
+.timerLabel{display:block!important;font-size:clamp(8px,.6vw,11px)!important;line-height:1.35;color:#e3c879!important;text-align:center!important;white-space:normal!important;letter-spacing:0!important}
+.drawTimer.waiting .timerCircle{border-top-color:#6dbb96;border-right-color:#3f8065}
+.drawTimer.urgent{animation:timerUrgentRef .6s ease-in-out infinite alternate}
+@keyframes timerUrgentRef{from{transform:translateX(-50%) scale(1)}to{transform:translateX(-50%) scale(1.035)}}
+
+/* Reference-style Card Values + Special Cards */
+.values{padding:12px!important;overflow:hidden!important;background:linear-gradient(145deg,rgba(8,10,9,.93),rgba(2,5,4,.94))!important;border:1px solid rgba(225,178,75,.52)!important}
+.valuesSection,.specialSection{width:100%}
+.specialSection{margin-top:10px}
+.values .panelTitle,.specialTitle{font-family:Georgia,serif;font-weight:700;font-size:clamp(14px,1vw,18px);color:#f0cf82;margin:0 0 7px}
+.valueRows,.specialRows{border:1px solid rgba(255,255,255,.08);border-radius:8px;overflow:hidden;background:rgba(255,255,255,.018)}
+.valueRows>div,.specialRows>div{display:grid;grid-template-columns:74px 1fr;align-items:center;min-height:25px;padding:4px 8px;border-bottom:1px solid rgba(255,255,255,.08);font-size:clamp(8px,.62vw,11px);line-height:1.2}
+.valueRows>div:last-child,.specialRows>div:last-child{border-bottom:0}
+.valueRows span,.specialRows span{color:#f3eee2;font-weight:600}
+.valueRows b,.specialRows b{color:#d8d0c0;font-weight:400}
+.valueRows .negative b{color:#e6c866}
+.specialRows>div{grid-template-columns:72px 1fr;min-height:31px}
+.specialRows b{line-height:1.22}
+.values{position:relative}
+.valuesHeader{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.valuesHeader .panelTitle{margin:0}
+.valuesMinBtn{flex:0 0 auto;width:30px;min-width:30px;height:28px;min-height:28px;padding:0;border-radius:7px;background:linear-gradient(145deg,#151713,#050806)!important;border:1px solid #c99d3d!important;color:#f4ead4!important;font-size:15px;line-height:1;box-shadow:0 5px 12px #0008,inset 0 1px rgba(255,255,255,.07)!important}
+.valuesMinBtn:hover{border-color:#f1ce72!important;transform:translateY(-1px)}
+.values.collapsed .valueRows,.values.collapsed .specialSection{display:none}
+.values.collapsed .valuesSection{min-height:0}
+.values.collapsed{padding-bottom:10px!important}
+
+/* Reference black/gold action controls */
+.caButtons button,.knockBtn{background:linear-gradient(145deg,#151713,#050806)!important;border:1px solid #c99d3d!important;color:#f4ead4!important;border-radius:9px!important;box-shadow:0 7px 18px #000a,inset 0 1px rgba(255,255,255,.07)!important;font-weight:500!important}
+.caButtons button:hover:not(:disabled),.knockBtn:hover:not(:disabled){background:linear-gradient(145deg,#211e16,#090b09)!important;border-color:#f1ce72!important}
+.caButtons button{min-height:42px!important;font-size:clamp(10px,.72vw,14px)!important;padding:9px 14px!important}
+.knockBtn{height:34px!important;min-height:34px!important;font-size:clamp(10px,.68vw,13px)!important}
+.knockBtn{width:100%!important}
+.caButtons{gap:7px!important}
+
+/* Keep the reference UI in a compact vertical hierarchy on the right */
+.rightCol .ability{margin-bottom:10px}
+.rightCol .values{margin-top:0}
+.knockPanel{gap:6px!important}
+
+/* Printed face cards should read like illustrated court cards */
+.caCardWrap .card.printedFace .facePrint{left:9%;right:9%;bottom:7%;top:16%;width:82%;height:77%}
+.ability .card.printedFace .facePrint{left:8%;right:8%;bottom:6%;top:16%;width:84%;height:78%}
+
+/* Do not let transparent stage layers steal clicks from controls */
+.centerAction,.centerAction *,#hand,.slot,.caButtons,.caButtons button,.knockPanel,.knockBtn{pointer-events:auto!important}
+
+/* ===== Editor launch under player name ===== */
+.playerIdentity{display:flex!important;flex-direction:column;align-items:flex-start;gap:2px}
+.knockPanel .knockBtn{position:relative!important;z-index:7000!important}
+
+/* ===== Full hitbox safety for card-action controls ===== */
+.centerAction.drawnMode,.centerAction.drawnMode .caSide,.centerAction.drawnMode .caButtons{position:relative!important;z-index:100000!important;pointer-events:auto!important;overflow:visible!important}
+.centerAction .caButtons button{position:relative!important;z-index:100001!important;pointer-events:auto!important;touch-action:manipulation!important;user-select:none!important;cursor:pointer!important;isolation:isolate}
+.centerAction .caButtons button::after{content:"";position:absolute;inset:-2px;z-index:-1;border-radius:inherit;pointer-events:auto}
+
+/* Reference-style timer and instruction overlay */
+.drawTimer{box-sizing:border-box!important}
+.drawTimer .turnTitle{letter-spacing:.1px!important}
+.drawTimer .timerCircle{flex-shrink:0!important}
+.caPrompt{border:1px solid rgba(225,178,75,.65)!important;border-radius:999px!important;padding:8px 13px!important;box-shadow:0 8px 20px #0008,inset 0 1px rgba(255,255,255,.06)!important;color:#f2d98e!important}
+
+/* Ensure editor controls don't block gameplay outside editor mode */
+#editorOverlay{pointer-events:none!important}
+</style>
+
 </head>
 <body>
 <div id="lobby" class="lobby">
@@ -552,7 +639,7 @@ html,body{background:#050302;overflow:hidden}
           </section>
         </aside>
         <main class="center"><div class="stage">
-          <div class="statusPill" id="statusPill">Waiting for the game to start.</div><div id="drawTimer" class="drawTimer"><span id="drawTimerNum" class="timerNum">15</span><span id="drawTimerLabel" class="timerLabel">SECONDS TO DRAW</span></div>
+          <div class="statusPill" id="statusPill">Waiting for the game to start.</div><div id="drawTimer" class="drawTimer"><div id="turnTitle" class="turnTitle">Your turn</div><div class="timerCircle"><span id="drawTimerNum" class="timerNum">15</span><span class="timerUnit">s</span></div><div id="drawTimerLabel" class="timerLabel">Draw a card, take an action or knock.</div></div>
           <div class="piles">
             <div class="pileGroup"><div id="deck" class="stack"></div><div class="pileLabel">Draw Pile</div><div id="deckCount" class="pileCount">52 cards left</div>
               <div id="throwRing" class="throwRing"><span id="throwRingNum">6</span><small>THROW YOUR CARDS</small></div>
@@ -564,12 +651,12 @@ html,body{background:#050302;overflow:hidden}
         </div></main>
         <aside class="rightCol">
           <section class="panel ability"><div class="panelTitle">Current Card Ability</div><div class="abilityRow"><div id="abilityCard"></div><div id="abilityText" class="abilityText">Draw a special card to reveal its ability.</div></div></section>
-          <section class="panel values"><div class="panelTitle">Card Values</div><div class="valuesText"><div>A = 1 · 2–10 = face value · J = 11 · Q = 12 · K = 13</div><div class="ruleLine"><strong>K♦</strong> = −1 while face down.</div><div class="ruleLine"><strong>Special Abilities</strong> (only when drawn):</div><div class="ruleLine">8 / 9 / 10 → Look at one of your cards.</div><div class="ruleLine">J → Blindly switch one of your cards with another player.</div><div class="ruleLine">Q → Look at one of yours and one opponent's card.</div><div class="ruleLine">K / K♦ → Look at one of yours and one opponent's card, then optionally switch those exact cards.</div></div></section>
+          <section class="panel values" id="valuesPanel"><div class="valuesSection"><div class="valuesHeader"><div class="panelTitle">Card Values</div><button id="valuesMinBtn" class="valuesMinBtn" type="button" aria-label="Minimize Card Values and Special Cards" aria-expanded="true">−</button></div><div class="valueRows"><div><span>A</span><b>1</b></div><div><span>2 – 10</span><b>Face value</b></div><div><span>J</span><b>11</b></div><div><span>Q</span><b>12</b></div><div><span>K</span><b>13</b></div><div class="negative"><span>K♦</span><b>−1 while face down</b></div></div></div><div class="specialSection"><div class="specialTitle">Special Cards</div><div class="specialRows"><div><span>8 / 9 / 10</span><b>Look at one of your cards</b></div><div><span>J</span><b>Blindly switch one of your cards with another player</b></div><div><span>Q</span><b>Look at one of yours and one opponent's card</b></div><div><span>K / K♦</span><b>Look at one of yours and one opponent's card, then optionally switch those exact cards</b></div></div></div></section>
           <section class="panel knockPanel"><button id="knockBtn" class="danger knockBtn">⚑ Knock</button></section>
         </aside>
       </div>
       <footer class="bottom">
-        <div><div id="youTitle" class="youTitle">Player</div><div id="youCount" class="youCount">4 cards</div></div>
+        <div class="playerIdentity"><div id="youTitle" class="youTitle">Player</div><div id="youCount" class="youCount">4 cards</div></div>
         <div id="hand" class="hand"></div>
         <div class="footerRule">Your positions never move.<br>A successful throw removes the card.<br>A wrong throw adds two cards.</div>
         <div class="footerPill">HIDDEN INFORMATION. REAL FRIENDSHIPS.</div>
@@ -589,16 +676,53 @@ html,body{background:#050302;overflow:hidden}
 <div id="editorOverlay"><div id="editorHandles" class="editorHandles"><div class="editorBox"></div><div class="editorHandle nw" data-handle="nw"></div><div class="editorHandle ne" data-handle="ne"></div><div class="editorHandle sw" data-handle="sw"></div><div class="editorHandle se" data-handle="se"></div><div class="editorRotate" data-handle="rotate" title="Rotate"></div></div></div>
 <div id="modalHost" class="modalHost"></div><div id="toast" class="toast"></div>
 <script>
+/* ===== Layout editor logic ===== */
+const EDITOR_KEY='switchie-layout-v1';
+let editorOn=false,editorSelected=null,editorDrag=null,editorState={};
+const EDITOR_EXCLUDE=new Set(['editToolbar','editHint','editTextPanel','editorOverlay','modalHost','toast','lobby']);
+function editorId(el){if(!el||el===document.body||el===document.documentElement)return null;if(el.id)return '#'+el.id;const parts=[];let n=el;while(n&&n!==$('game')){let tag=n.tagName.toLowerCase(),i=1;let sib=n.previousElementSibling;while(sib){if(sib.tagName===n.tagName)i++;sib=sib.previousElementSibling}parts.unshift(`${tag}:nth-of-type(${i})`);n=n.parentElement}return '#game>'+parts.join('>')}
+function editorLabel(el){if(!el)return 'Nothing selected';let t=(el.innerText||el.textContent||el.id||el.className||'Element').trim().replace(/\s+/g,' ');return t.slice(0,32)||el.id||'Element'}
+function editorEligible(el){if(!el||!(el instanceof HTMLElement)||!$('game')?.contains(el))return false;if(EDITOR_EXCLUDE.has(el.id))return false;if(el.closest('#editToolbar,#editHint,#editTextPanel,#editorOverlay,#modalHost,#toast'))return false;if(el===document.querySelector('.table')||el===document.querySelector('.shell')||el===document.querySelector('.content')||el===document.querySelector('.center')||el===document.querySelector('.stage'))return false;return true}
+function editorGet(el){const id=editorId(el);if(!id)return null;return editorState[id]||{id,text:null,x:0,y:0,s:1,r:0,label:editorLabel(el)} }
+function editorApply(el){const st=editorGet(el);el.classList.add('editorTarget');el.style.setProperty('--edit-x',`${st.x||0}px`);el.style.setProperty('--edit-y',`${st.y||0}px`);el.style.setProperty('--edit-s',`${st.s||1}`);el.style.setProperty('--edit-r',`${st.r||0}deg`);if(st.text!=null && el.childElementCount===0)el.textContent=st.text}
+function editorApplyAll(){document.querySelectorAll('#game *').forEach(el=>{if(editorEligible(el)){const id=editorId(el);if(editorState[id])editorApply(el)}});editorRefreshHandles()}
+function editorSave(){try{localStorage.setItem(EDITOR_KEY,JSON.stringify(editorState))}catch(e){}}
+function editorLoad(){try{const raw=localStorage.getItem(EDITOR_KEY);if(raw)editorState=JSON.parse(raw)||{}}catch(e){editorState={}}}
+function editorRemoveSelection(){if(editorSelected){editorSelected.classList.remove('editorSelected','editorTextTarget');editorSelected=null}$('editorHandles').classList.remove('open');$('editTextPanel').classList.remove('open');$('editSelectionName').textContent='Nothing selected'}
+function editorSelect(el){if(!editorEligible(el))return;editorRemoveSelection();editorSelected=el;editorApply(el);el.classList.add('editorSelected');if((el.childElementCount===0 || /^[^<>]+$/.test(el.textContent||'')) && (el.textContent||'').trim())el.classList.add('editorTextTarget');$('editSelectionName').textContent=editorLabel(el);editorRefreshHandles()}
+function editorRefreshHandles(){const h=$('editorHandles');if(!editorSelected||!editorOn){h.classList.remove('open');return}const r=editorSelected.getBoundingClientRect();h.style.left=`${r.left}px`;h.style.top=`${r.top}px`;h.style.width=`${r.width}px`;h.style.height=`${r.height}px`;h.classList.add('open')}
+function editorUpdate(){if(!editorSelected)return;const st=editorGet(editorSelected);editorState[st.id]=st;editorApply(editorSelected);editorRefreshHandles();editorSave()}
+function editorStartMove(e){if(!editorOn||!editorSelected||e.target.closest('.editorHandle,.editorRotate'))return;if(e.button!==undefined&&e.button!==0)return;e.preventDefault();e.stopPropagation();const st=editorGet(editorSelected);editorDrag={type:'move',sx:e.clientX,sy:e.clientY,x:st.x||0,y:st.y||0};window.addEventListener('pointermove',editorPointerMove);window.addEventListener('pointerup',editorPointerUp,{once:true})}
+function editorStartScale(e,handle){if(!editorSelected)return;e.preventDefault();e.stopPropagation();const r=editorSelected.getBoundingClientRect(),st=editorGet(editorSelected);editorDrag={type:'scale',sx:e.clientX,sy:e.clientY,w:r.width,h:r.height,s:st.s||1,handle,baseW:r.width,baseH:r.height};window.addEventListener('pointermove',editorPointerMove);window.addEventListener('pointerup',editorPointerUp,{once:true})}
+function editorStartRotate(e){if(!editorSelected)return;e.preventDefault();e.stopPropagation();const r=editorSelected.getBoundingClientRect(),st=editorGet(editorSelected);editorDrag={type:'rotate',cx:r.left+r.width/2,cy:r.top+r.height/2,startAngle:Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))*180/Math.PI,r:st.r||0};window.addEventListener('pointermove',editorPointerMove);window.addEventListener('pointerup',editorPointerUp,{once:true})}
+function editorPointerMove(e){if(!editorSelected||!editorDrag)return;const st=editorGet(editorSelected);if(editorDrag.type==='move'){st.x=editorDrag.x+(e.clientX-editorDrag.sx);st.y=editorDrag.y+(e.clientY-editorDrag.sy)}else if(editorDrag.type==='scale'){const dx=e.clientX-editorDrag.sx,dy=e.clientY-editorDrag.sy;let delta=(Math.abs(dx)>Math.abs(dy)?dx:dy);if(editorDrag.handle==='nw'||editorDrag.handle==='sw')delta=-delta;const factor=Math.max(.15,Math.min(5,editorDrag.s*(1+delta/Math.max(80,editorDrag.baseW))));st.s=factor}else if(editorDrag.type==='rotate'){const a=Math.atan2(e.clientY-editorDrag.cy,e.clientX-editorDrag.cx)*180/Math.PI;st.r=Math.round((editorDrag.r+a-editorDrag.startAngle)*10)/10}editorState[st.id]=st;editorApply(editorSelected);editorRefreshHandles()}
+function editorPointerUp(){editorDrag=null;editorSave()}
+function editorOpenText(){if(!editorSelected)return;const txt=editorSelected.childElementCount===0?editorSelected.textContent.trim():(editorSelected.innerText||'').trim();$('editTextArea').value=txt;$('editTextPanel').classList.add('open');$('editTextArea').focus()}
+function editorApplyText(){if(!editorSelected)return;const v=$('editTextArea').value;const st=editorGet(editorSelected);st.text=v;editorState[st.id]=st;if(editorSelected.childElementCount===0)editorSelected.textContent=v;else editorSelected.innerText=v;editorSave();editorApply(editorSelected);editorRefreshHandles()}
+function editorReset(){if(!editorSelected)return;const id=editorId(editorSelected);delete editorState[id];editorSelected.style.removeProperty('--edit-x');editorSelected.style.removeProperty('--edit-y');editorSelected.style.removeProperty('--edit-s');editorSelected.style.removeProperty('--edit-r');editorSelected.classList.remove('editorTarget');editorSelect(editorSelected)}
+function editorResetAll(){editorState={};localStorage.removeItem(EDITOR_KEY);document.querySelectorAll('.editorTarget').forEach(el=>{el.style.removeProperty('--edit-x');el.style.removeProperty('--edit-y');el.style.removeProperty('--edit-s');el.style.removeProperty('--edit-r');el.classList.remove('editorTarget','editorSelected','editorTextTarget')});editorRemoveSelection()}
+function editorExport(){const payload={version:1,stage:'Switchie',exportedAt:new Date().toISOString(),elements:editorState};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='switchie-layout.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function editorImport(file){if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const p=JSON.parse(rd.result);editorState=p.elements||p||{};editorSave();editorApplyAll();toast('Layout imported')}catch(e){toast('Invalid layout JSON')}};rd.readAsText(file)}
+function editorToggle(on=!editorOn){editorOn=on;document.documentElement.classList.toggle('editorOn',editorOn);$('editToolbar').classList.toggle('open',editorOn);$('editHint').classList.toggle('open',editorOn);if(editorOn){editorLoad();editorApplyAll()}else editorRemoveSelection()}
+function editorInit(){editorLoad();$('editDone').onclick=()=>editorToggle(false);$('editExport').onclick=editorExport;$('editImport').onclick=()=>$('editFile').click();$('editFile').onchange=e=>editorImport(e.target.files[0]);$('editReset').onclick=editorReset;$('editResetAll').onclick=editorResetAll;$('editToggleText').onclick=editorOpenText;$('editTextApply').onclick=editorApplyText;$('editTextCancel').onclick=()=>$('editTextPanel').classList.remove('open');$('game').addEventListener('pointerdown',e=>{if(!editorOn)return;if(e.target.closest('#editToolbar,#editTextPanel,#editorHandles'))return;let el=e.target;while(el&&el!==$('game')&&!editorEligible(el))el=el.parentElement;if(editorEligible(el)){editorSelect(el);editorStartMove(e)}else editorRemoveSelection()});$('game').addEventListener('dblclick',e=>{if(!editorOn)return;if(editorSelected&&editorSelected.contains(e.target))editorOpenText()});$('editorHandles').addEventListener('pointerdown',e=>{const h=e.target.closest('.editorHandle,.editorRotate');if(!h||!editorSelected)return;const type=h.dataset.handle;if(type==='rotate')editorStartRotate(e);else editorStartScale(e,type)});window.addEventListener('resize',()=>editorRefreshHandles());const b=document.createElement('button');b.id='editorLaunch';b.type='button';b.textContent='✎ Edit Layout';b.title='Open the visual layout editor (Alt+E)';b.style.cssText='position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:9000;display:none;background:linear-gradient(145deg,#1b211c,#090e0b);border:1px solid #d6b15d99;color:#f2dfaa;border-radius:8px;padding:8px 12px;font-size:11px;box-shadow:0 8px 18px #0009';document.body.appendChild(b);b.onclick=()=>editorToggle(true);window.addEventListener('keydown',e=>{if(e.key==='Escape'&&editorOn)editorToggle(false);if(e.key==='e'&&e.altKey&&$('game').style.display!=='none')editorToggle(!editorOn)});const obs=new MutationObserver(()=>{if(editorOn)requestAnimationFrame(editorApplyAll)});obs.observe($('game'),{childList:true,subtree:true});window.showEditorButton=()=>{b.style.display='block'};window.hideEditorButton=()=>{b.style.display='none'};editorInitDone=true}
+let editorInitDone=false;
+window.addEventListener('load',()=>{ if(!editorInitDone) editorInit(); });
+
+
+</script>
+
+<script>
 const DEMO_MODE=new URLSearchParams(location.search).get('demo')==='1';
 if(DEMO_MODE && typeof io==='undefined'){ window.io=()=>({on(){},emit(){},}) }
 const socket=io({autoConnect:true});
 const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 let actionStatus='',actionStatusTimer=null;
 let state=null,playerId=localStorage.getItem('switchiePlayerId')||'',roomCode=localStorage.getItem('switchieRoomCode')||'',chatMode='room',privateMessages=[],lastDrawnKey='',drawAnimating=false,toastTimer;
+let valuesPanelCollapsed=false;
 let mode='idle',uiOwnIndex=null,uiTargetPlayer=null,throwCardIndex=null,ringTimer=null,drawTimer=null;
 const suitMap={S:'♠',H:'♥',D:'♦',C:'♣'};
 function suit(s){return suitMap[s]||s}function isRed(s){return s==='H'||s==='D'}
-function card(c,back=false,cls=''){if(back||!c)return `<div class="card back ${cls}"></div>`;return `<div class="card face ${isRed(c.s)?'red':''} ${cls}"><div class="corner">${esc(c.r)}<br>${suit(c.s)}</div><div class="suit">${suit(c.s)}</div><div class="corner rot">${esc(c.r)}<br>${suit(c.s)}</div></div>`}
+function card(c,back=false,cls=''){if(back||!c)return `<div class="card back ${cls}"></div>`;const print=['J','Q','K'].includes(c.r)?`<img class="facePrint" src="/cards/${c.r.toLowerCase()}_art.png" alt="${c.r} card portrait">`:'';return `<div class="card face ${isRed(c.s)?'red':''} ${['J','Q','K'].includes(c.r)?'printedFace':''} ${cls}"><div class="corner">${esc(c.r)}<br>${suit(c.s)}</div>${print}<div class="suit">${suit(c.s)}</div><div class="corner rot">${esc(c.r)}<br>${suit(c.s)}</div></div>`}
 function toast(msg){clearTimeout(toastTimer);$('toast').textContent=msg;$('toast').classList.add('show');toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2600)}
 function showModal(html){$('modalHost').innerHTML=html;$('modalHost').classList.add('open')}
 function closeModal(){$('modalHost').classList.remove('open');$('modalHost').innerHTML=''}
@@ -633,9 +757,11 @@ function renderOpponents(){
 }
 function renderDeck(){
   const count=state?.started?Math.max(0,state.deckCount||0):52;
-  $('deck').innerHTML=`${card(null,true)}${count>20?card(null,true):''}${count>10?card(null,true):''}`;
+  const deckLayers=Math.max(1,Math.min(6,Math.ceil(count/10)));
+  $('deck').innerHTML=Array.from({length:deckLayers},()=>card(null,true)).join('');
   $('deckCount').textContent=state?.started?`${count} cards left`:'52 cards ready';
-  $('pile').innerHTML=state?.pileTop?`${card(state.pileTop)}`:card(null,true);
+  // Keep the discard pile visibly thick while keeping the actual top card face-up.
+  $('pile').innerHTML=state?.pileTop?Array.from({length:4},()=>card(state.pileTop)).join(''):card(null,true);
   const canDraw=myTurn()&&!state?.drawn&&mode==='idle'&&!state?.ended;
   $('deck').classList.toggle('canDraw',!!canDraw);
 }
@@ -663,8 +789,7 @@ function renderDrawTimer(){
     const secs=Math.ceil(remain/1000);
     $('drawTimerNum').textContent=String(secs);
     const minePending=state.drawPendingPlayerId===state.playerId;
-    if(state.drawPhase==='waiting') $('drawTimerLabel').textContent=minePending?'SECONDS TO DRAW':'DRAW CARD';
-    else $('drawTimerLabel').textContent=minePending?'SECONDS TO DECIDE':'DECISION TIMER';
+    $('turnTitle').textContent = minePending ? 'Your turn' : `${activeName()}'s turn`; $('drawTimerLabel').textContent = state.drawPhase==='waiting' ? (minePending?'Draw a card, take an action or knock.':`${activeName()} is drawing a card.`) : (minePending?'Draw a card, take an action or knock.':`${activeName()} is deciding.`);
     el.classList.toggle('urgent',secs<=5);
     if(remain<=0){el.classList.remove('show');clearInterval(drawTimer);drawTimer=null}
   };
@@ -747,7 +872,7 @@ function renderCenterAction(){
   el.classList.remove('drawnMode');
   if(mode==='pickThrow' && throwCardIndex!==null){
     el.classList.remove('hidden');
-    el.innerHTML=`<div class="caCardWrap">${card(null,true)}</div><div class="caSide"><div class="caPrompt">Throw this face-down card if you think it matches the discard pile?</div><div class="caButtons"><button id="caThrowGo" class="goldBtn">→ Throw this card</button><button id="caCancel" class="ghost">Cancel</button></div><div class="caCancelHint">Or click anywhere on the green felt to cancel.</div></div>`;
+    el.innerHTML=`<div class="caCardWrap">${card(null,true)}</div><div class="caSide"><div class="caPrompt">Throw this face-down card if you think it matches the discard pile?</div><div class="caButtons"><button id="caThrowGo" class="goldBtn">▣ Throw Card</button><button id="caCancel" class="ghost">Cancel</button></div><div class="caCancelHint">Or click anywhere on the green felt to cancel.</div></div>`;
     $('caThrowGo').onclick=()=>{socket.emit('throw',{index:throwCardIndex});animateThrowFlourish();resetUiMode();render()}; $('caCancel').onclick=()=>{resetUiMode();render()}; return;
   }
   if(drawn && ['drawnMenu','pickReplace','pickOwnForAbility','pickOpponent','pickOppCard'].includes(mode)){
@@ -757,7 +882,7 @@ function renderCenterAction(){
     if(mode==='pickOwnForAbility') prompt=drawn.r==='J'?'Click one of your face-down cards to offer for the blind switch.':'Click one of your face-down cards to look at.';
     if(mode==='pickOpponent') prompt='Click an opponent above to target.';
     if(mode==='pickOppCard') prompt='Click one of their face-down cards above.';
-    const buttons=mode==='drawnMenu'?`<div class="caButtons">${special?'<button id="caAbility" class="goldBtn">★ Use Ability</button>':''}<button id="caReplace">⇄ Replace Face-Down Card</button><button id="caDiscard" class="primary">▢ Discard</button></div>`:'';
+    const buttons=mode==='drawnMenu'?`<div class="caButtons">${special?'<button id="caAbility" class="goldBtn">★ Use Ability</button>':''}<button id="caReplace">⇄ Replace Card</button><button id="caDiscard" class="primary">▢ Discard</button></div>`:'';
     el.innerHTML=`<div class="caCardWrap">${card(drawn,false)}</div><div class="caSide"><div class="caPrompt">${prompt}</div>${buttons}<div class="caCancelHint">Click anywhere on the green felt to go back.</div></div>`;
     if(mode==='drawnMenu'){
       if($('caAbility')) $('caAbility').onclick=()=>{socket.emit('beginAbility');mode='pickOwnForAbility';render()};
@@ -876,9 +1001,19 @@ function howToPlay(){
   $('rulesClose').onclick=closeModal;
 }
 
+function toggleValuesPanel(){
+  valuesPanelCollapsed=!valuesPanelCollapsed;
+  const panel=$('valuesPanel'),btn=$('valuesMinBtn');
+  if(!panel||!btn)return;
+  panel.classList.toggle('collapsed',valuesPanelCollapsed);
+  btn.textContent=valuesPanelCollapsed?'＋':'−';
+  btn.setAttribute('aria-expanded',String(!valuesPanelCollapsed));
+  btn.setAttribute('aria-label',valuesPanelCollapsed?'Expand Card Values and Special Cards':'Minimize Card Values and Special Cards');
+}
 function roomSettings(){
   const host=state?.playerId===state?.hostId;
-  showModal(`<div class="modal"><div class="modalTitle">Room Settings</div><div class="modalSub">${host?'Edit your private table before the game starts.':'Only the host can edit room settings.'}</div><div style="display:grid;gap:8px"><input id="roomTitleInput" class="field" maxlength="32" value="${esc(state?.title&&state.title!==state.code?state.title:'Private Table')}" placeholder="Room name"><button id="saveRoomSettings" class="goldBtn" ${host&&!state.started?'':'disabled'}>Save Room Settings</button><button id="settingsAddAi" ${host&&!state.started?'':'disabled'}>Add AI Player</button><button id="settingsStart" class="primary" ${host&&!state.started&&players().length>=2?'':'disabled'}>Start Game</button></div></div>`);
+  showModal(`<div class="modal"><button id="roomSettingsClose" class="modalClose" type="button" aria-label="Close Room Settings">×</button><div class="modalTitle">Room Settings</div><div class="modalSub">${host?'Edit your private table before the game starts.':'Only the host can edit room settings.'}</div><div style="display:grid;gap:8px"><input id="roomTitleInput" class="field" maxlength="32" value="${esc(state?.title&&state.title!==state.code?state.title:'Private Table')}" placeholder="Room name"><button id="saveRoomSettings" class="goldBtn" ${host&&!state.started?'':'disabled'}>Save Room Settings</button><button id="settingsAddAi" ${host&&!state.started?'':'disabled'}>Add AI Player</button><button id="settingsStart" class="primary" ${host&&!state.started&&players().length>=2?'':'disabled'}>Start Game</button></div></div>`);
+  if($('roomSettingsClose'))$('roomSettingsClose').onclick=()=>closeModal();
   if($('saveRoomSettings'))$('saveRoomSettings').onclick=()=>{socket.emit('roomSettings',{roomTitle:$('roomTitleInput').value});closeModal()};
   if($('settingsAddAi'))$('settingsAddAi').onclick=()=>{socket.emit('addAI');closeModal()};
   if($('settingsStart'))$('settingsStart').onclick=()=>{socket.emit('start');closeModal()};
@@ -899,6 +1034,7 @@ $('copy').onclick=async()=>{if(!state?.code)return;const url=`${location.origin}
 $('invite').onclick=()=>$('copy').click();
 $('addAi').onclick=()=>{if(state?.playerId===state?.hostId&&!state.started)socket.emit('addAI');else toast('Only the host can add AI before the game starts.')};
 $('startGame').onclick=()=>{if(state?.playerId!==state?.hostId)return toast('Only the host can start the game.');socket.emit('start')};
+$('valuesMinBtn').onclick=toggleValuesPanel;
 $('settings').onclick=roomSettings;$('howToPlay').onclick=howToPlay;$('leaveRoom').onclick=leaveRoom;
 $('newGame').onclick=()=>{state=null;resetUiMode();closeModal();localStorage.removeItem('switchiePlayerId');localStorage.removeItem('switchieRoomCode');$('game').style.display='none';$('lobby').style.display='grid';$('name').focus()};
 document.querySelector('.feltWrap').addEventListener('click',()=>{ if(mode==='idle')return; if(state?.drawn && ['pickReplace','pickOwnForAbility','pickOpponent','pickOppCard'].includes(mode)){ mode='drawnMenu'; uiOwnIndex=null; uiTargetPlayer=null; } else { resetUiMode(); } render(); });

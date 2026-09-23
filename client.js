@@ -71,6 +71,7 @@ function renderDrawTimer(){
     const secs=Math.ceil(remain/1000);
     $('drawTimerNum').textContent=String(secs);
     const minePending=state.drawPendingPlayerId===state.playerId;
+    $('turnTitle').textContent=minePending?'Your turn':`${esc(activeName())}'s turn`;
     if(state.drawPhase==='waiting') $('drawTimerLabel').textContent=minePending?'SECONDS TO DRAW':'DRAW CARD';
     else $('drawTimerLabel').textContent=minePending?'SECONDS TO DECIDE':'DECISION TIMER';
     el.classList.toggle('urgent',secs<=5);
@@ -166,9 +167,9 @@ function renderCenterAction(){
     if(mode==='pickOpponent') prompt='Click an opponent above to target.';
     if(mode==='pickOppCard') prompt='Click one of their face-down cards above.';
     const buttons=mode==='drawnMenu'?`<div class="caButtons">${special?'<button id="caAbility" class="goldBtn">★ Use Ability</button>':''}<button id="caReplace">⇄ Replace Face-Down Card</button><button id="caDiscard" class="primary">▢ Discard</button></div>`:'';
-    el.innerHTML=`<div class="caCardWrap">${card(drawn,false)}</div><div class="caSide"><div class="caPrompt">${prompt}</div>${buttons}<div class="caCancelHint">Click anywhere on the green felt to go back.</div></div>`;
+    el.innerHTML=`<div class="caCardWrap">${card(drawn,false)}</div><div class="caSide"><div class="caPrompt">${prompt}</div>${buttons}${mode==='drawnMenu'?'': '<div class="caCancelHint">Click anywhere on the green felt to go back.</div>'}</div>`;
     if(mode==='drawnMenu'){
-      if($('caAbility')) $('caAbility').onclick=()=>{socket.emit('beginAbility');mode='pickOwnForAbility';render()};
+      if($('caAbility')) $('caAbility').onclick=()=>{mode='abilityStarting';actionStatus='Starting ability…';render();socket.emit('beginAbility')};
       $('caReplace').onclick=()=>{mode='pickReplace';render()}; $('caDiscard').onclick=()=>{socket.emit('discardDrawn');resetUiMode();render()};
     }
     return;
@@ -194,60 +195,45 @@ function render(){
   if(state.ended)showEnd();
 }
 function showEnd(){if($('modalHost').classList.contains('open'))return;const scores=state.scores?state.scores.map(s=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #fff1"><span>${esc(s.name)}</span><strong>${s.score}</strong></div>`).join(''):'';showModal(`<div class="modal"><div class="modalTitle">${esc(state.winner||'Game Over')} wins</div><div class="modalSub">${state.scores?'Final scores':'The game ended because a player emptied their hand.'}</div>${scores}<div class="choices" style="margin-top:14px"><button id="closeEnd" class="primary">Back to Room</button></div></div>`);$('closeEnd').onclick=closeModal}
-function animateDraw(){
-  if(drawAnimating||!state?.drawn)return;
-  const src=document.querySelector('#deck .card:last-child'),target=$('centerAction');
-  if(!src||!target){mode='drawnMenu';render();return}
-  drawAnimating=true;
-  target.classList.add('drawTransitHide');
-  const a=src.getBoundingClientRect(),b=target.getBoundingClientRect(),el=document.createElement('div');
-  el.className='fly smoothDraw';el.innerHTML=card(null,true);
-  const bx=b.left+b.width/2-36, by=b.top+b.height*.12;
-  el.style.left=a.left+'px';el.style.top=a.top+'px';
-  el.style.setProperty('--tx',(bx-a.left)+'px');el.style.setProperty('--ty',(by-a.top)+'px');
-  el.style.setProperty('--dx',((bx-a.left)*.42)+'px');el.style.setProperty('--dy',((by-a.top)-75)+'px');
+const remoteHeldDraws=new Map();
+function makeMotionCard(faceDown=true){const el=document.createElement('div');el.className='fly simpleCardMotion';el.innerHTML=card(null,faceDown);return el}
+function flyCardTo(src,dst,opts={}){
+  if(!src||!dst)return null;
+  const a=src.getBoundingClientRect(),b=dst.getBoundingClientRect();
+  const w=opts.width||72,h=opts.height||101;
+  const sx=a.left+a.width/2-w/2, sy=a.top+a.height/2-h/2;
+  const ex=b.left+b.width/2-w/2, ey=b.top+b.height/2-h/2;
+  const dx=ex-sx,dy=ey-sy;
+  const el=makeMotionCard(opts.faceDown!==false);
+  el.style.width=w+'px';el.style.height=h+'px';el.style.left=sx+'px';el.style.top=sy+'px';
+  el.style.opacity='1';el.style.transform='translate3d(0,0,0) rotate(-2deg) scale(.96)';
   document.body.appendChild(el);
-  setTimeout(()=>{el.remove();drawAnimating=false;target.classList.remove('drawTransitHide');mode='drawnMenu';render();target.classList.add('actionPing');setTimeout(()=>target.classList.remove('actionPing'),700)},1080);
+  const duration=opts.duration||760,start=performance.now();
+  const lift=Math.max(45,Math.min(150,Math.hypot(dx,dy)*.18));
+  const c1x=dx*.28,c1y=dy*.18-lift,c2x=dx*.72,c2y=dy*.82-lift*.35;
+  let finished=false;
+  const finish=()=>{if(finished)return;finished=true;el.remove();opts.onDone?.()};
+  const frame=now=>{
+    if(finished)return;
+    const t=Math.min(1,(now-start)/duration),e=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+    const u=1-e;
+    const x=u*u*u*0+3*u*u*e*c1x+3*u*e*e*c2x+e*e*e*dx;
+    const y=u*u*u*0+3*u*u*e*c1y+3*u*e*e*c2y+e*e*e*dy;
+    const angle=-4+Math.sin(e*Math.PI)*7;
+    const scale=.96+Math.sin(e*Math.PI)*.08;
+    el.style.transform=`translate3d(${x}px,${y}px,0) rotate(${angle}deg) scale(${scale})`;
+    if(t<1)requestAnimationFrame(frame);else finish();
+  };
+  requestAnimationFrame(frame);
+  return el;
 }
-function actionPointForPlayer(actorId){
-  if(actorId===state?.playerId){
-    const slot=document.querySelector('#hand .slot:last-child');
-    return slot || $('centerAction');
-  }
-  return document.querySelector(`.opp[data-pid="${CSS.escape(actorId||'')}"] .miniBack:last-child`) || document.querySelector(`.opp[data-pid="${CSS.escape(actorId||'')}"]`) || $('topOpps');
-}
-function animateRemoteAction(a){
-  if(!a||a.actorId===state?.playerId)return;
-  const src= a.type==='draw' ? document.querySelector('#deck .card:last-child') : actionPointForPlayer(a.actorId);
-  const dst= a.type==='draw' ? $('centerAction') : $('pile');
-  if(!src||!dst)return;
-  const s=src.getBoundingClientRect(),d=dst.getBoundingClientRect();
-  const el=document.createElement('div');el.className='fly remoteAction';el.innerHTML=card(null,true);
-  el.style.left=s.left+'px';el.style.top=s.top+'px';
-  const tx=d.left+d.width/2-36-s.left,ty=d.top+d.height/2-50-s.top;
-  el.style.setProperty('--tx',tx+'px');el.style.setProperty('--ty',ty+'px');el.style.setProperty('--dx',(tx*.48)+'px');el.style.setProperty('--dy',(ty-55)+'px');
-  document.body.appendChild(el);
-  if(a.type==='draw'){
-    setTimeout(()=>{
-      el.remove();
-      const mid=document.createElement('div');mid.className='fly remoteAction';mid.innerHTML=card(null,true);mid.style.left=(d.left+d.width/2-36)+'px';mid.style.top=(d.top+d.height*.18)+'px';
-      const pile=$('pile').getBoundingClientRect();const tx2=pile.left+pile.width/2-36-(d.left+d.width/2-36),ty2=pile.top+pile.height/2-50-(d.top+d.height*.18);
-      mid.style.setProperty('--tx',tx2+'px');mid.style.setProperty('--ty',ty2+'px');mid.style.setProperty('--dx',(tx2*.45)+'px');mid.style.setProperty('--dy',(ty2-35)+'px');document.body.appendChild(mid);setTimeout(()=>mid.remove(),820);
-    },1050);
-  } else setTimeout(()=>el.remove(),820);
-}
-function animateThrowFlourish(){
-  if(throwCardIndex===null)return;
-  const src=$('centerAction'),dst=$('pile');
-  if(!src||!dst)return;
-  const a=src.getBoundingClientRect(),b=dst.getBoundingClientRect(),el=document.createElement('div');
-  el.className='fly';el.innerHTML=card(null,true);
-  el.style.left=a.left+'px';el.style.top=a.top+'px';
-  el.style.setProperty('--tx',(b.left-a.left)+'px');el.style.setProperty('--ty',(b.top-a.top)+'px');
-  el.style.setProperty('--dx',((b.left-a.left)*.5)+'px');el.style.setProperty('--dy',((b.top-a.top)-45)+'px');
-  document.body.appendChild(el);setTimeout(()=>el.remove(),760);
-  $('pile').classList.add('pop');setTimeout(()=>$('pile').classList.remove('pop'),450);
-}
+function animateDraw(){if(drawAnimating||!state?.drawn)return;const src=document.querySelector('#deck .card:last-child'),target=$('centerAction');if(!src||!target){mode='drawnMenu';render();return}drawAnimating=true;const el=flyCardTo(src,target,{faceDown:false,onDone:()=>{drawAnimating=false;mode='drawnMenu';render();target.classList.add('actionPing');setTimeout(()=>target.classList.remove('actionPing'),500)}});if(!el){drawAnimating=false;mode='drawnMenu';render()}}
+function actionPointForPlayer(actorId){if(actorId===state?.playerId){const slot=document.querySelector('#hand .slot:last-child');return slot||$('centerAction')}return document.querySelector(`.opp[data-pid="${CSS.escape(actorId||'')}"]`)||$('topOpps')}
+function removeRemoteHeld(actorId){const el=remoteHeldDraws.get(actorId);if(el){el.remove();remoteHeldDraws.delete(actorId)}}
+function repositionRemoteHeld(){for(const [id,el] of remoteHeldDraws){const opp=document.querySelector(`.opp[data-pid="${CSS.escape(id)}"]`);if(!opp)continue;const r=opp.getBoundingClientRect();el.style.left=(r.left+r.width/2-36)+'px';el.style.top=(r.top+r.height*.72-50)+'px';}}
+window.addEventListener('resize',repositionRemoteHeld);
+function animateRemoteAction(a){if(!a||a.actorId===state?.playerId)return;const opp=document.querySelector(`.opp[data-pid="${CSS.escape(a.actorId||'')}"]`);if(!opp)return;if(a.type==='draw'){removeRemoteHeld(a.actorId);const src=document.querySelector('#deck .card:last-child');if(!src)return;const target=document.createElement('div');target.style.cssText='position:fixed;left:0;top:0;width:72px;height:101px;pointer-events:none;opacity:0';document.body.appendChild(target);const r=opp.getBoundingClientRect();target.style.left=(r.left+r.width/2-36)+'px';target.style.top=(r.top+r.height*.72-50)+'px';flyCardTo(src,target,{faceDown:true,onDone:()=>{target.remove();const held=document.createElement('div');held.className='remoteHeldCard';held.innerHTML=card(null,true);const rr=opp.getBoundingClientRect();held.style.left=(rr.left+rr.width/2-36)+'px';held.style.top=(rr.top+rr.height*.72-50)+'px';document.body.appendChild(held);remoteHeldDraws.set(a.actorId,held)}});return}removeRemoteHeld(a.actorId);const src=actionPointForPlayer(a.actorId),dst=$('pile');flyCardTo(src,dst,{faceDown:true,onDone:()=>{$('pile').classList.add('pop');setTimeout(()=>$('pile').classList.remove('pop'),300)}})}
+function animateThrowFlourish(){if(throwCardIndex===null)return;const src=$('centerAction'),dst=$('pile');flyCardTo(src,dst,{faceDown:true,onDone:()=>{$('pile').classList.add('pop');setTimeout(()=>$('pile').classList.remove('pop'),300)}})}
 function revealCard(title,cards,canSwitch=false){const html=cards.map(x=>`<div><div class="revealMeta">${esc(x.owner)} · position ${x.index+1}</div><div class="flipWrap"><div class="flipInner"><div class="flipFace">${card(null,true)}</div><div class="flipFace flipFront">${card(x.card,false)}</div></div></div></div>`).join('');showModal(`<div class="modal"><div class="modalTitle">${esc(title)}</div><div class="modalSub">The selected card${cards.length>1?'s are':' is'} revealed for 4 seconds.</div><div class="revealGrid">${html}</div><div class="timerBar"></div></div>`);setTimeout(()=>{if(canSwitch){showModal(`<div class="modal"><div class="modalTitle">Switch the exact two cards?</div><div class="modalSub">Only the two cards you just inspected may be switched.</div><div class="choices"><button id="keepKing">Keep</button><button id="switchKing" class="goldBtn">Switch</button></div></div>`);$('keepKing').onclick=()=>{closeModal();socket.emit('kingChoice',{switchCards:false})};$('switchKing').onclick=()=>{closeModal();socket.emit('kingChoice',{switchCards:true})}}else closeModal()},4000)}
 function howToPlay(){
   showModal(`<div class="modal rulesModal"><button id="rulesClose" class="modalClose" aria-label="Close rules">×</button><div class="modalTitle">How to Play Switchie</div><div class="modalSub">Hidden cards. Big moves.</div><div class="rulesGrid">
@@ -280,6 +266,7 @@ $('create').onclick=()=>socket.emit('create',{name:$('name').value.trim()||'Play
 $('join').onclick=()=>socket.emit('join',{name:$('name').value.trim()||'Player',code:$('code').value.trim().toUpperCase(),playerId});
 $('deck').onclick=()=>{ if(myTurn()&&!state?.drawn&&mode==='idle'&&!state?.ended){ socket.emit('draw'); } };
 $('knockBtn').onclick=()=>socket.emit('knock');
+$('editLayoutBtn').onclick=()=>window.editorToggle?.(true);
 $('sendChat').onclick=sendChat;$('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat()});
 $('roomTab').onclick=()=>{chatMode='room';renderChat()};$('privateTab').onclick=()=>{chatMode='private';renderChat()};
 $('copy').onclick=async()=>{if(!state?.code)return;const url=`${location.origin}/?room=${state.code}`;try{await navigator.clipboard.writeText(url);toast('Private room invite copied.')}catch{toast(url)}};
@@ -288,14 +275,31 @@ $('addAi').onclick=()=>{if(state?.playerId===state?.hostId&&!state.started)socke
 $('startGame').onclick=()=>{if(state?.playerId!==state?.hostId)return toast('Only the host can start the game.');socket.emit('start')};
 $('settings').onclick=roomSettings;$('howToPlay').onclick=howToPlay;$('leaveRoom').onclick=leaveRoom;
 $('newGame').onclick=()=>{state=null;resetUiMode();closeModal();localStorage.removeItem('switchiePlayerId');localStorage.removeItem('switchieRoomCode');$('game').style.display='none';$('lobby').style.display='grid';$('name').focus()};
-document.querySelector('.feltWrap').addEventListener('click',()=>{ if(mode==='idle')return; if(state?.drawn && ['pickReplace','pickOwnForAbility','pickOpponent','pickOppCard'].includes(mode)){ mode='drawnMenu'; uiOwnIndex=null; uiTargetPlayer=null; } else { resetUiMode(); } render(); });
-document.querySelector('.stage').addEventListener('click',(e)=>{ if(e.target.classList.contains('stage')||e.target.classList.contains('piles')||e.target.id==='statusPill'){ if(mode==='idle')return; if(state?.drawn && ['pickReplace','pickOwnForAbility','pickOpponent','pickOppCard'].includes(mode)){ mode='drawnMenu'; uiOwnIndex=null; uiTargetPlayer=null; } else { resetUiMode(); } render(); } });
+// Defensive pointer fallback: if a transparent/stacked layer receives the pointer,
+// activate the visible card-action button whose full rectangle contains the pointer.
+document.addEventListener('pointerdown',e=>{
+  if(!state || !state.drawn && mode!=='pickThrow') return;
+  const ids=['caDiscard','caThrowGo','caCancel','caAbility','caReplace'];
+  for(const id of ids){
+    const b=document.getElementById(id);
+    if(!b || b.disabled) continue;
+    const r=b.getBoundingClientRect();
+    if(e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom){
+      if(e.target!==b && !b.contains(e.target)){ e.preventDefault(); e.stopPropagation(); b.click(); }
+      break;
+    }
+  }
+},true);
+
+document.querySelector('.feltWrap').addEventListener('click',()=>{ if(mode==='idle')return; if(state?.abilityPending){ return; } else if(state?.drawn && ['pickReplace','pickOwnForAbility','pickOpponent','pickOppCard'].includes(mode)){ mode='drawnMenu'; uiOwnIndex=null; uiTargetPlayer=null; } else { resetUiMode(); } render(); });
+document.querySelector('.stage').addEventListener('click',(e)=>{ if(e.target.classList.contains('stage')||e.target.classList.contains('piles')||e.target.id==='statusPill'){ if(mode==='idle')return; if(state?.abilityPending){ return; } else if(state?.drawn && ['pickReplace','pickOwnForAbility','pickOpponent','pickOppCard'].includes(mode)){ mode='drawnMenu'; uiOwnIndex=null; uiTargetPlayer=null; } else { resetUiMode(); } render(); } });
 socket.on('joined',x=>{playerId=x.playerId;roomCode=x.code;localStorage.setItem('switchiePlayerId',playerId);localStorage.setItem('switchieRoomCode',roomCode);$('code').value=x.code;toast(`Private room ${x.code} ready.`)});
 socket.on('state',x=>{
   if(!x||!Array.isArray(x.players)){toast('Invalid game state received. Reconnecting…');return}
   const prevTurn=state?state.turn:null;
   state=x;
-  if(!state.drawn && !state.abilityPending && ['drawnMenu','pickReplace','pickOwnForAbility','pickOpponent','pickOppCard'].includes(mode)) resetUiMode();
+  if(state.abilityPending && state.abilityPending.ownerId===state.playerId && mode==='abilityStarting') mode='pickOwnForAbility';
+  if(!state.drawn && !state.abilityPending && ['drawnMenu','pickReplace','pickOwnForAbility','pickOpponent','pickOppCard','abilityStarting'].includes(mode)) resetUiMode();
   if(!myTurn() && mode!=='idle' && mode!=='pickThrow') resetUiMode();
   const next=state.drawn?state.drawn.r+state.drawn.s:'';
   if(state.started&&state.drawn&&next!==lastDrawnKey&&myTurn()){

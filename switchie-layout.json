@@ -1,0 +1,216 @@
+{
+  "version": 1,
+  "stage": "Switchie",
+  "exportedAt": "2026-09-23T17:15:00.000Z",
+  "elements": {
+    "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>aside:nth-of-type(2)>section:nth-of-type(1)": {
+      "id": "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>aside:nth-of-type(2)>section:nth-of-type(1)",
+      "text": null,
+      "x": -462.99609375,
+      "y": 153.59765625,
+      "s": 1,
+      "r": 0,
+      "label": "Current Card Ability Draw a spec"
+    },
+    "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>aside:nth-of-type(2)>section:nth-of-type(1)>div:nth-of-type(2)": {
+      "id": "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>aside:nth-of-type(2)>section:nth-of-type(1)>div:nth-of-type(2)",
+      "text": null,
+      "x": 3.78125,
+      "y": -7.8515625,
+      "s": 1,
+      "r": 0,
+      "label": "Draw a special card to reveal it"
+    },
+    "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>aside:nth-of-type(2)>section:nth-of-type(2)": {
+      "id": "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>aside:nth-of-type(2)>section:nth-of-type(2)",
+      "text": null,
+      "x": 8.87890625,
+      "y": -98.78515625,
+      "s": 1,
+      "r": 0,
+      "label": "Card Values A 1 2 – 10 Face valu"
+    },
+    "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>main:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(3)>div:nth-of-type(2)>div:nth-of-type(1)>div:nth-of-type(1)": {
+      "id": "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>main:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(3)>div:nth-of-type(2)>div:nth-of-type(1)>div:nth-of-type(1)",
+      "text": null,
+      "x": -12.16015625,
+      "y": -9.9375,
+      "s": 1,
+      "r": 0,
+      "label": "card back editorTarget editorSel"
+    },
+    "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>aside:nth-of-type(2)>section:nth-of-type(1)>div:nth-of-type(1)": {
+      "id": "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>aside:nth-of-type(2)>section:nth-of-type(1)>div:nth-of-type(1)",
+      "text": null,
+      "x": 0,
+      "y": -0.1171875,
+      "s": 1,
+      "r": 0,
+      "label": "Current Card Ability"
+    },
+    "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>main:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(3)": {
+      "id": "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>main:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(3)",
+      "text": null,
+      "x": -42.33203125,
+      "y": 0.98046875,
+      "s": 1,
+      "r": 0,
+      "label": "Draw Pile 52 cards ready 6 THROW"
+    },
+    "#knockBtn": {
+      "id": "#knockBtn",
+      "text": null,
+      "x": -613.921875,
+      "y": -21.08203125,
+      "s": 1,
+      "r": 0,
+      "label": "⚑ Knock"
+    },
+    "#hand": {
+      "id": "#hand",
+      "text": null,
+      "x": 14.3203125,
+      "y": -14.6328125,
+      "s": 1,
+      "r": 0,
+      "label": "hand"
+    },
+    "#game>div:nth-of-type(1)>div:nth-of-type(2)>footer:nth-of-type(1)": {
+      "id": "#game>div:nth-of-type(1)>div:nth-of-type(2)>footer:nth-of-type(1)",
+      "text": null,
+      "x": -41.30078125,
+      "y": -30.34375,
+      "s": 1,
+      "r": 0,
+      "label": "Player 0 cards"
+    },
+    "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>aside:nth-of-type(2)>section:nth-of-type(3)": {
+      "id": "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>aside:nth-of-type(2)>section:nth-of-type(3)",
+      "text": null,
+      "x": -192.8203125,
+      "y": -90.1328125,
+      "s": 1,
+      "r": 0,
+      "label": "⚑ Knock"
+    },
+    "#drawTimer": {
+      "id": "#drawTimer",
+      "text": null,
+      "x": 122.76171875,
+      "y": -6.59765625,
+      "s": 1,
+      "r": 0,
+      "label": "Your turn 5 s Draw a card, take "
+    },
+    "#game>div:nth-of-type(1)>div:nth-of-type(2)>header:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)": {
+      "id": "#game>div:nth-of-type(1)>div:nth-of-type(2)>header:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)",
+      "text": null,
+      "x": 211.65234375,
+      "y": -15.9140625,
+      "s": 1.2366859110571418,
+      "r": 0,
+      "label": "Maya (AI) 4 cards AI READY"
+    },
+    "#game>div:nth-of-type(1)>div:nth-of-type(2)>footer:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(3)": {
+      "id": "#game>div:nth-of-type(1)>div:nth-of-type(2)>footer:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(3)",
+      "text": null,
+      "x": 0,
+      "y": 0.2734375,
+      "s": 1,
+      "r": 0,
+      "label": "3"
+    },
+    "#youTitle": {
+      "id": "#youTitle",
+      "text": null,
+      "x": 59.96484375,
+      "y": -33.70703125,
+      "s": 1.703173828125,
+      "r": 0,
+      "label": "Bob"
+    },
+    "#youCount": {
+      "id": "#youCount",
+      "text": null,
+      "x": 59.19921875,
+      "y": -28.453125,
+      "s": 1.517626953125,
+      "r": 0,
+      "label": "4 cards"
+    },
+    "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>main:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(3)>div:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(3)": {
+      "id": "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>main:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(3)>div:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(3)",
+      "text": null,
+      "x": -1.5390625,
+      "y": -5.7421875,
+      "s": 1,
+      "r": 0,
+      "label": "card back editorTarget editorSel"
+    },
+    "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>main:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(3)>div:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(2)": {
+      "id": "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>main:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(3)>div:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(2)",
+      "text": null,
+      "x": -0.6328125,
+      "y": -5.046875,
+      "s": 1,
+      "r": 0,
+      "label": "card back editorTarget editorSel"
+    },
+    "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>main:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(3)>div:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(1)": {
+      "id": "#game>div:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>main:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(3)>div:nth-of-type(1)>div:nth-of-type(1)>div:nth-of-type(1)",
+      "text": null,
+      "x": -2.6953125,
+      "y": -4.27734375,
+      "s": 1,
+      "r": 0,
+      "label": "card back editorTarget editorSel"
+    },
+    "#game": {
+      "id": "#game",
+      "text": null,
+      "x": 0.24609375,
+      "y": 0,
+      "s": 1,
+      "r": 0,
+      "label": "Maya (AI) 4 cards AI READY ROOM "
+    },
+    "#statusPill": {
+      "id": "#statusPill",
+      "text": null,
+      "x": -33.0859375,
+      "y": -3.4921875,
+      "s": 1,
+      "r": 0,
+      "label": "Click the draw pile, or click a "
+    },
+    "#game>div:nth-of-type(1)>div:nth-of-type(2)>header:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>div:nth-of-type(2)": {
+      "id": "#game>div:nth-of-type(1)>div:nth-of-type(2)>header:nth-of-type(1)>div:nth-of-type(2)>div:nth-of-type(1)>div:nth-of-type(2)",
+      "text": null,
+      "x": 0,
+      "y": -0.12109375,
+      "s": 1,
+      "r": 0,
+      "label": "miniHand editorTarget editorSele"
+    }
+  },
+  "uiFeatures": {
+    "cardValuesSpecialCards": {
+      "minimizable": true,
+      "defaultExpanded": true
+    },
+    "editLayoutButtonUnderPlayerName": {
+      "removed": true
+    },
+    "roomSettingsCloseButton": {
+      "enabled": true,
+      "position": "top-right"
+    },
+    "cardPerspective": {
+      "reference": "top-down casino table reference",
+      "drawPileAngleDeg": 5,
+      "discardPileAngleDeg": 1,
+      "stackLayers": "up to 6 draw-pile layers and 4 discard-pile layers",
+      "timerPosition": "immediately right of discard pile"
+    }
+  }
+}
