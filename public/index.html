@@ -311,6 +311,29 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 @keyframes timerUrgent{from{transform:translateX(-50%) scale(1)}to{transform:translateX(-50%) scale(1.06)}}
 @keyframes pickPulse{0%,100%{filter:drop-shadow(0 0 3px #ffdb70aa)}50%{filter:drop-shadow(0 0 12px #ffdb70)}}
 
+/* ===== Readability and layout refinements ===== */
+.panelTitle{font-size:18px}
+.logLine{font-size:11px;line-height:1.42}
+.abilityText{font-size:11px;line-height:1.5}
+.valuesText{font-size:10px;line-height:1.5}
+.valuesText ul{margin:7px 0 0;padding-left:20px}
+.valuesText li{margin:3px 0}
+.statusPill{top:43%;font-size:13px;padding:8px 20px;z-index:30}
+.rightCol{padding-top:105px}
+.ability{height:112px;min-height:112px;flex-basis:112px}
+.roomMenu{z-index:5000}
+.centerAction{z-index:1200}
+.centerAction.drawnMode{flex-direction:row;align-items:center}
+.centerAction.drawnMode .caSide{min-width:230px}
+.caPrompt{font-size:12px;padding:9px 14px}
+.caButtons{gap:9px}
+.caButtons button{font-size:11px;min-height:42px;padding:9px 15px}
+.centerAction:not(.drawnMode) .caSide{display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-width:220px}
+.centerAction:not(.drawnMode) .caButtons{flex-direction:column;align-items:stretch;width:100%}
+.centerAction:not(.drawnMode) .caButtons button{width:100%}
+.modalHost{z-index:9000}
+.flipWrap,.flipInner,.flipFace{z-index:9100!important}
+.flipFront,.flipFront .card.face{z-index:9200!important}
 @media(max-width:1150px){.header{grid-template-columns:195px 1fr 145px}.content{grid-template-columns:190px minmax(0,1fr) 245px}.roomMenu{width:145px}.topOpps{gap:10px}.opp{min-width:140px;width:160px;flex:0 1 160px}.bottom{grid-template-columns:1fr}.slot{width:67px;height:96px}.card{width:62px;height:88px}.hand{gap:7px}}
 @media(max-width:880px){.app{padding:5px}.table{border-radius:24px}.shell{grid-template-rows:66px 1fr 118px;padding:6px 8px}.header{grid-template-columns:160px 1fr 170px}.logo{font-size:44px}.tag{font-size:7px;letter-spacing:2px}.topOpps{gap:6px}.opp{padding:6px 8px;min-width:110px}.avatar{width:24px;height:24px;flex-basis:24px}.name{font-size:9px}.miniBack{width:23px;height:33px}.content{grid-template-columns:170px minmax(260px,1fr) 220px;gap:6px}.bottom{grid-template-columns:1fr;padding:12px 5% 6px}.slot{width:54px;height:76px}.card{width:54px;height:76px}.hand{gap:4px}.youTitle{font-size:16px}.footerRule{font-size:6px}.panelTitle{font-size:13px}.logLine,.valuesText,.abilityText{font-size:7.5px}.roomMenu{width:170px}.menuGrid button{font-size:8px}.code{font-size:15px}.throwRing{right:-46px;width:44px;height:44px}}
 @media(max-width:680px){.shell{grid-template-rows:54px 1fr 96px}.header{grid-template-columns:120px 1fr 128px}.logo{font-size:34px;letter-spacing:-3px}.tag{display:none}.topOpps{display:none}.roomMenu{width:128px}.menuGrid{grid-template-columns:1fr}.menuGrid button{min-height:22px}.codeLabel{display:none}.content{grid-template-columns:130px minmax(170px,1fr) 145px;gap:4px}.chatPanel{height:44%}.panel{border-radius:8px}.piles{gap:16px}.tagline{display:none}.bottom{grid-template-columns:1fr;padding:10px 2% 4px}.slot{width:44px;height:62px}.card{width:44px;height:62px}.hand{gap:2px}.youTitle{font-size:12px}.youCount{font-size:7px}.footerRule{font-size:5px}.footerPill{font-size:5px}.caCardWrap .card{width:76px;height:106px}.caButtons button{font-size:8.5px;min-height:32px;padding:6px 9px}.throwRing{display:none}}
@@ -361,7 +384,7 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
         </div></main>
         <aside class="rightCol">
           <section class="panel ability"><div class="panelTitle">Current Card Ability</div><div class="abilityRow"><div id="abilityCard"></div><div id="abilityText" class="abilityText">Draw a special card to reveal its ability.</div></div></section>
-          <section class="panel values"><div class="panelTitle">Card Values</div><div class="valuesText"><div>A = 1 · 2–10 = face value · J = 11 · Q = 12 · K = 13</div><div class="ruleLine"><strong>K♦</strong> = −1 while face down.</div><div class="ruleLine"><strong>Special Abilities</strong> (only when drawn):</div><div class="ruleLine">8 / 9 / 10 → Look at one of your cards.</div><div class="ruleLine">J → Blindly switch one of your cards with another player.</div><div class="ruleLine">Q → Look at one of yours and one opponent's card.</div><div class="ruleLine">K / K♦ → Look at one of yours and one opponent's card, then optionally switch those exact cards.</div></div></section>
+          <section class="panel values"><div class="panelTitle">Card Values</div><div class="valuesText"><ul><li>Ace = 1</li><li>2–10 = face value</li><li>Jack = 11</li><li>Queen = 12</li><li>King = 13</li><li><strong>K♦ = −1</strong> while face down</li></ul><div class="ruleLine"><strong>Special Abilities</strong> (only when drawn):</div><ul><li>8 / 9 / 10 → Look at one of your cards.</li><li>J → Blindly switch one of your cards with another player.</li><li>Q → Look at one of yours and one opponent's card.</li><li>K / K♦ → Look at one of yours and one opponent's card, then optionally switch those exact cards.</li></ul></div></section>
           <section class="panel knockPanel"><button id="knockBtn" class="danger knockBtn">⚑ Knock</button></section>
         </aside>
       </div>
