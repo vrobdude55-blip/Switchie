@@ -80,7 +80,7 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 .shell{position:relative;z-index:6;height:100%;display:grid;grid-template-rows:128px 1fr 190px;gap:6px;padding:8px 0}
 
 /* ===== Header ===== */
-.header{display:grid;grid-template-columns:195px 1fr 145px;gap:10px;align-items:start;padding-top:0}
+.header{position:relative;z-index:30;display:grid;grid-template-columns:195px 1fr 145px;gap:10px;align-items:start;padding-top:0}
 .brand{padding:2px 0 0 6px}
 .brand .tag{display:none}
 .logo{font:700 clamp(48px,5.4vw,72px)/.72 Georgia,"Times New Roman",serif;letter-spacing:-5px;color:#f2d692;text-shadow:0 6px 14px #000d,0 0 22px rgba(240,196,96,.12);position:relative;display:inline-block}
@@ -114,15 +114,15 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 .miniBack:nth-child(3n){transform:rotate(-2deg)}
 .miniBack.pickable{cursor:pointer;border-color:#ffe49a;box-shadow:0 0 0 2px #ffdb70,0 0 14px #ffdb70aa;transform:translateY(-3px) scale(1.05) !important;animation:pickPulse 1.1s ease-in-out infinite}
 
-.roomMenu{justify-self:end;width:235px;background:linear-gradient(145deg,rgba(4,10,8,.96),rgba(1,4,3,.95));border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 28px #000b;padding:6px}
+.roomMenu{position:relative;z-index:100;pointer-events:auto;justify-self:end;width:235px;background:linear-gradient(145deg,rgba(4,10,8,.96),rgba(1,4,3,.95));border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 28px #000b;padding:6px}
 .codeRow{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 8px;border-bottom:1px solid #ffffff12}
 .codeLabel{font-size:8px;letter-spacing:1.4px;color:#e1ce96}
 .code{font-size:19px;font-weight:800;letter-spacing:2px}
 .roomTitle{font-size:8px;color:#9b9683;margin-top:1px}
 .copy{width:34px;min-height:30px;padding:0;font-size:17px}
 .menuGrid{display:grid;grid-template-columns:1fr;gap:1px;padding-top:3px}
-.menuGrid button{border:0;box-shadow:none;background:transparent;text-align:left;font-size:9px;min-height:20px;padding:3px 10px}
-.menuGrid #newGame{order:1}.menuGrid #addAi{order:2}.menuGrid #startGame{order:3}.menuGrid #invite{order:4}.menuGrid #settings{order:5}.menuGrid #howToPlay{order:6}.menuGrid #leaveRoom{order:7}
+.menuGrid{position:relative;z-index:101}.menuGrid button{position:relative;z-index:102;pointer-events:auto;border:0;box-shadow:none;background:transparent;text-align:left;font-size:9px;min-height:20px;padding:3px 10px}
+.menuGrid #newGame{order:1}.menuGrid #invite{order:2}.menuGrid #addAi{order:3}.menuGrid #startGame{order:4}.menuGrid #settings{order:5}.menuGrid #howToPlay{order:6}.menuGrid #leaveRoom{order:7}
 .menuGrid button.active{background:#4a3512;color:#f4d896}
 .menuGrid button:hover{background:#fff1;transform:none}
 .mi{color:var(--gold);width:17px;display:inline-block}
@@ -264,6 +264,7 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 .card.tiny .suit{font-size:18px}
 
 .fly{position:fixed;z-index:1000;pointer-events:none;animation:fly .72s cubic-bezier(.18,.82,.25,1) forwards;transform-origin:center}
+.fly.smoothDraw{animation:flyDraw 1.05s cubic-bezier(.18,.82,.25,1) forwards}.fly.remoteAction{animation:remoteAction .8s cubic-bezier(.18,.82,.25,1) forwards}.drawTransitHide{visibility:hidden!important}.actionPing{animation:actionPing .7s ease-out}
 .fly .card{width:72px;height:101px}
 .pop{animation:pilePop .45s ease}
 .cardEnter{animation:cardEnter .42s cubic-bezier(.2,.8,.2,1)}
@@ -271,21 +272,8 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 /* ===== Modals ===== */
 .modalHost{position:fixed;inset:0;z-index:2000;display:none;place-items:center;background:#0008;backdrop-filter:blur(4px)}
 .modalHost.open{display:grid}
-.modal{width:min(470px,88vw);background:linear-gradient(145deg,#0b1511f7,#020705f7);border:1px solid #e4bd65;border-radius:13px;box-shadow:0 25px 70px #000d,0 0 35px #d3ad5220;padding:18px;animation:modalIn .24s ease}
-.rulesModal{width:min(760px,92vw);max-height:min(82vh,760px);overflow:auto;padding:22px 24px 24px;position:relative;background:linear-gradient(145deg,rgba(7,24,17,.985),rgba(1,8,5,.985));border-color:#e8c96f;box-shadow:0 28px 90px #000e,0 0 45px rgba(214,177,84,.14),inset 0 1px rgba(255,255,255,.08)}
-.rulesModal:before{content:"";position:absolute;inset:7px;border:1px solid rgba(224,188,97,.16);border-radius:9px;pointer-events:none}
-.rulesClose{position:absolute;top:10px;right:10px;width:36px;min-height:36px;padding:0;border-radius:50%;font-size:18px;line-height:1;background:linear-gradient(180deg,#3b2b12,#171008);border-color:#d9b65c;color:#f4dfaa;z-index:2}
-.rulesHeader{padding-right:46px;margin-bottom:16px}
-.rulesHeader .modalTitle{text-align:left;font-size:25px}
-.rulesIntro{font-size:10px;color:#c8bea5;line-height:1.55;margin-top:6px}
-.rulesGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.ruleCard{background:linear-gradient(145deg,rgba(2,12,8,.78),rgba(0,5,4,.72));border:1px solid rgba(224,188,97,.25);border-radius:10px;padding:11px 12px;box-shadow:inset 0 1px rgba(255,255,255,.04)}
-.ruleCard h3{margin:0 0 7px;color:#efd28a;font:700 13px Georgia,serif}
-.ruleCard p,.ruleCard li{font-size:9.5px;line-height:1.5;color:#ded5bd}
-.ruleCard ul{margin:0;padding-left:16px}.ruleCard li+li{margin-top:4px}
-.ruleNote{margin-top:10px;padding:9px 11px;border-radius:8px;background:rgba(102,72,20,.22);border:1px solid rgba(224,188,97,.22);font-size:9px;color:#d8cba8;line-height:1.45}
-@media(max-width:680px){.rulesGrid{grid-template-columns:1fr}.rulesModal{padding:18px 16px 20px}.rulesHeader .modalTitle{font-size:21px}}
-.modalTitle{font:700 20px Georgia,serif;color:#efd28a;text-align:center}
+.modal{position:relative;width:min(680px,90vw);max-height:82vh;overflow:auto;background:linear-gradient(145deg,#0b1511f7,#020705f7);border:1px solid #e4bd65;border-radius:13px;box-shadow:0 25px 70px #000d,0 0 35px #d3ad5220;padding:18px;animation:modalIn .24s ease}
+.modalClose{position:absolute;right:10px;top:10px;width:34px;min-height:34px;padding:0;border-radius:50%;font-size:18px;background:rgba(0,0,0,.35);border-color:#e4bd6588}.rulesModal{max-height:82vh}.rulesGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.ruleBlock{padding:10px 12px;background:rgba(255,255,255,.035);border:1px solid #d6b15d2b;border-radius:9px}.ruleBlock h3{margin:0 0 5px;color:#efd28a;font:700 14px Georgia,serif}.ruleBlock p,.ruleBlock li{font-size:10px;line-height:1.45;color:#d6cfbd}.ruleBlock ul{margin:5px 0 0;padding-left:17px}.drawTimer{display:none;position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:20;min-width:145px;text-align:center;padding:6px 12px;border:1px solid #e7c76e;background:linear-gradient(180deg,#392b0d,#171107);border-radius:999px;box-shadow:0 0 20px #d9ad4a44;font-weight:800;letter-spacing:.8px;color:#ffe49a}.drawTimer.show{display:block}.drawTimer .timerNum{font-size:18px;margin-right:5px}.drawTimer .timerLabel{font-size:8px;color:#d8c99f}.modalTitle{font:700 20px Georgia,serif;color:#efd28a;text-align:center}
 .modalSub{font-size:10px;color:#c9c0a9;text-align:center;margin:6px 0 12px}
 .choices{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
 .choices button{min-width:52px}
@@ -310,6 +298,9 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
 @keyframes fly{0%{transform:translate(0,0) rotate(0) scale(.86);opacity:0}12%{opacity:1}45%{transform:translate(var(--dx),var(--dy)) rotate(-9deg) scale(1.06)}100%{transform:translate(var(--tx),var(--ty)) rotate(0) scale(1);opacity:.96}}
+@keyframes flyDraw{0%{transform:translate(0,0) rotate(0) scale(.78);opacity:0}12%{opacity:1}48%{transform:translate(var(--dx),var(--dy)) rotate(-8deg) scale(1.08)}78%{transform:translate(calc(var(--tx) * .86),calc(var(--ty) * .86)) rotate(4deg) scale(1.02)}100%{transform:translate(var(--tx),var(--ty)) rotate(0) scale(1);opacity:1}}
+@keyframes remoteAction{0%{transform:translate(0,0) rotate(0) scale(.82);opacity:0}15%{opacity:1}55%{transform:translate(var(--dx),var(--dy)) rotate(-7deg) scale(1.05)}100%{transform:translate(var(--tx),var(--ty)) rotate(0) scale(.98);opacity:.95}}
+@keyframes actionPing{0%{box-shadow:0 0 0 0 #e5c87588}100%{box-shadow:0 0 0 14px transparent}}
 @keyframes pilePop{0%,100%{transform:scale(1)}45%{transform:scale(1.12) rotate(-2deg)}}
 @keyframes cardEnter{from{opacity:0;transform:translateY(12px) scale(.92) rotate(-3deg)}to{opacity:1;transform:none}}
 @keyframes caPop{from{opacity:0;transform:translateY(16px) scale(.9)}to{opacity:1;transform:none}}
@@ -321,7 +312,7 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 
 @media(max-width:1150px){.header{grid-template-columns:195px 1fr 145px}.content{grid-template-columns:190px minmax(0,1fr) 245px}.roomMenu{width:145px}.topOpps{gap:10px}.opp{min-width:140px;width:160px;flex:0 1 160px}.bottom{grid-template-columns:1fr}.slot{width:67px;height:96px}.card{width:62px;height:88px}.hand{gap:7px}}
 @media(max-width:880px){.app{padding:5px}.table{border-radius:24px}.shell{grid-template-rows:66px 1fr 118px;padding:6px 8px}.header{grid-template-columns:160px 1fr 170px}.logo{font-size:44px}.tag{font-size:7px;letter-spacing:2px}.topOpps{gap:6px}.opp{padding:6px 8px;min-width:110px}.avatar{width:24px;height:24px;flex-basis:24px}.name{font-size:9px}.miniBack{width:23px;height:33px}.content{grid-template-columns:170px minmax(260px,1fr) 220px;gap:6px}.bottom{grid-template-columns:1fr;padding:12px 5% 6px}.slot{width:54px;height:76px}.card{width:54px;height:76px}.hand{gap:4px}.youTitle{font-size:16px}.footerRule{font-size:6px}.panelTitle{font-size:13px}.logLine,.valuesText,.abilityText{font-size:7.5px}.roomMenu{width:170px}.menuGrid button{font-size:8px}.code{font-size:15px}.throwRing{right:-46px;width:44px;height:44px}}
-@media(max-width:680px){.shell{grid-template-rows:54px 1fr 96px}.header{grid-template-columns:120px 1fr 128px}.logo{font-size:34px;letter-spacing:-3px}.tag{display:none}.topOpps{display:none}.roomMenu{width:128px}.menuGrid{grid-template-columns:1fr}.menuGrid button:nth-child(n+3){display:none}.codeLabel{display:none}.content{grid-template-columns:130px minmax(170px,1fr) 145px;gap:4px}.chatPanel{height:44%}.panel{border-radius:8px}.piles{gap:16px}.tagline{display:none}.bottom{grid-template-columns:1fr;padding:10px 2% 4px}.slot{width:44px;height:62px}.card{width:44px;height:62px}.hand{gap:2px}.youTitle{font-size:12px}.youCount{font-size:7px}.footerRule{font-size:5px}.footerPill{font-size:5px}.caCardWrap .card{width:76px;height:106px}.caButtons button{font-size:8.5px;min-height:32px;padding:6px 9px}.throwRing{display:none}}
+@media(max-width:680px){.shell{grid-template-rows:54px 1fr 96px}.header{grid-template-columns:120px 1fr 128px}.logo{font-size:34px;letter-spacing:-3px}.tag{display:none}.topOpps{display:none}.roomMenu{width:128px}.menuGrid{grid-template-columns:1fr}.menuGrid button{min-height:22px}.codeLabel{display:none}.content{grid-template-columns:130px minmax(170px,1fr) 145px;gap:4px}.chatPanel{height:44%}.panel{border-radius:8px}.piles{gap:16px}.tagline{display:none}.bottom{grid-template-columns:1fr;padding:10px 2% 4px}.slot{width:44px;height:62px}.card{width:44px;height:62px}.hand{gap:2px}.youTitle{font-size:12px}.youCount{font-size:7px}.footerRule{font-size:5px}.footerPill{font-size:5px}.caCardWrap .card{width:76px;height:106px}.caButtons button{font-size:8.5px;min-height:32px;padding:6px 9px}.throwRing{display:none}}
 </style>
 </head>
 <body>
@@ -342,7 +333,7 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
         <div id="topOpps" class="topOpps"></div>
         <div class="roomMenu">
           <div class="codeRow"><div><div class="codeLabel">ROOM CODE</div><div id="roomCode" class="code">------</div><div id="roomTitle" class="roomTitle">Private Table</div></div><button id="copy" class="copy">▣</button></div>
-          <div class="menuGrid"><button id="newGame"><span class="mi">♦</span>New Game</button><button id="addAi"><span class="mi">♟</span>Add AI Player</button><button id="startGame" class="active"><span class="mi">▶</span>Start Game</button><button id="invite"><span class="mi">⌁</span>Invite Friends</button><button id="settings"><span class="mi">⚙</span>Settings</button><button id="howToPlay"><span class="mi">?</span>How to Play</button><button id="leaveRoom"><span class="mi">↩</span>Leave Room</button></div>
+          <div class="menuGrid"><button id="newGame"><span class="mi">♦</span>New Game</button><button id="invite"><span class="mi">⌁</span>Invite Friends</button><button id="addAi"><span class="mi">♟</span>Add AI Player</button><button id="startGame" class="active"><span class="mi">▶</span>Start Game</button><button id="settings"><span class="mi">⚙</span>Settings</button><button id="howToPlay"><span class="mi">?</span>How to Play</button><button id="leaveRoom"><span class="mi">↩</span>Leave Room</button></div>
         </div>
       </header>
       <div class="content">
@@ -357,7 +348,7 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
           </section>
         </aside>
         <main class="center"><div class="stage">
-          <div class="statusPill" id="statusPill">Waiting for the game to start.</div>
+          <div class="statusPill" id="statusPill">Waiting for the game to start.</div><div id="drawTimer" class="drawTimer"><span id="drawTimerNum" class="timerNum">30</span><span id="drawTimerLabel" class="timerLabel">SECONDS TO DECIDE</span></div>
           <div class="piles">
             <div class="pileGroup"><div id="deck" class="stack"></div><div class="pileLabel">Draw Pile</div><div id="deckCount" class="pileCount">52 cards left</div>
               <div id="throwRing" class="throwRing"><span id="throwRingNum">6</span><small>THROW WINDOW</small></div>
@@ -387,7 +378,7 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 const socket=io({autoConnect:true});
 const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 let state=null,playerId=localStorage.getItem('switchiePlayerId')||'',roomCode=localStorage.getItem('switchieRoomCode')||'',chatMode='room',privateMessages=[],lastDrawnKey='',drawAnimating=false,toastTimer;
-let mode='idle',uiOwnIndex=null,uiTargetPlayer=null,throwCardIndex=null,ringTimer=null;
+let mode='idle',uiOwnIndex=null,uiTargetPlayer=null,throwCardIndex=null,ringTimer=null,drawTimer=null;
 const suitMap={S:'♠',H:'♥',D:'♦',C:'♣'};
 function suit(s){return suitMap[s]||s}function isRed(s){return s==='H'||s==='D'}
 function card(c,back=false,cls=''){if(back||!c)return `<div class="card back ${cls}"></div>`;return `<div class="card face ${isRed(c.s)?'red':''} ${cls}"><div class="corner">${esc(c.r)}<br>${suit(c.s)}</div><div class="suit">${suit(c.s)}</div><div class="corner rot">${esc(c.r)}<br>${suit(c.s)}</div></div>`}
@@ -445,7 +436,22 @@ function renderThrowRing(){
   };
   tick();ringTimer=setInterval(tick,120);
 }
-function canInitiateThrow(){ return (myTurn()&&!state?.drawn) || !!state?.throwOpen; }
+function renderDrawTimer(){
+  const el=$('drawTimer');
+  if(drawTimer){clearInterval(drawTimer);drawTimer=null}
+  if(!state?.drawPendingPlayerId||!state?.drawDeadline){el.classList.remove('show');return}
+  el.classList.add('show');
+  const tick=()=>{
+    const remain=Math.max(0,state.drawDeadline-Date.now());
+    const secs=Math.ceil(remain/1000);
+    $('drawTimerNum').textContent=String(secs);
+    const minePending=state.drawPendingPlayerId===state.playerId;
+    $('drawTimerLabel').textContent=minePending?'SECONDS TO DECIDE':'MATCH THROW ONLY';
+    if(remain<=0){el.classList.remove('show');clearInterval(drawTimer);drawTimer=null}
+  };
+  tick();drawTimer=setInterval(tick,150);
+}
+function canInitiateThrow(){ return (myTurn()&&!state?.drawn) || !!state?.throwOpen || (!!state?.drawPendingPlayerId && state.drawPendingPlayerId!==state.playerId); }
 function renderHand(){
   const me=mine();const n=me?.handCount||0;
   $('youCount').textContent=`${n} cards`;
@@ -500,10 +506,11 @@ function formatTime(iso){try{return new Date(iso).toLocaleTimeString([], {hour:'
 function renderChat(){const roomMsgs=(state?.chat||[]).filter(m=>m.kind==='room');let html='';if(chatMode==='room'){html=roomMsgs.slice().reverse().map(m=>`<div class="msg"><div class="avatar"></div><div><div class="msgMeta">${esc(m.from)} · ${formatTime(m.time)}</div><div class="bubble">${esc(m.text)}</div></div></div>`).join('')}else{html=privateMessages.slice(-30).map(m=>`<div class="msg"><div class="avatar"></div><div><div class="msgMeta">${esc(m.from)} · ${formatTime(m.time)}</div><div class="bubble private">${esc(m.text)}</div></div></div>`).join('')}$('chatMessages').innerHTML=html||`<div class="msgMeta" style="padding:12px 2px">${chatMode==='room'?'No messages yet.':'Private messages will appear here.'}</div>`;$('privateRow').style.display=chatMode==='private'?'flex':'none';$('roomTab').classList.toggle('active',chatMode==='room');$('privateTab').classList.toggle('active',chatMode==='private');const opts=players().filter(p=>p.id!==state?.playerId&&!p.ai);$('privateTo').innerHTML=opts.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')||'<option>No friends online</option>'}
 
 function statusText(){
-  if(!state?.started) return state?.playerId===state?.hostId?'Add AI Player or invite a friend, then press Start Game.':'Waiting for the host to start the game.';
+  if(!state?.started) return state?.playerId===state?.hostId?'Add AI Player or invite a friend, then press Play vs AI.':'Waiting for the host to start the game.';
   if(state.ended) return 'The hand is over.';
   if(mode==='pickThrow') return 'Confirm the card you want to throw.';
   if(mode==='drawnMenu') return 'Use its ability, replace a face-down card, or discard it.';
+  if(state.drawPendingPlayerId && state.drawPendingPlayerId!==state.playerId) return `${activeName()} is deciding — only matching hidden-card throws are allowed.`;
   if(mode==='pickReplace') return 'Click one of your face-down cards to replace.';
   if(mode==='pickOwnForAbility') return 'Click one of your face-down cards.';
   if(mode==='pickOpponent') return 'Click an opponent to target.';
@@ -545,7 +552,7 @@ function render(){
   $('lobby').style.display='none';$('game').style.display='block';$('roomCode').textContent=state.code;
   $('statusPill').textContent=statusText();
   $('roomTitle').textContent=state.title&&state.title!==state.code?state.title:'Private Table';
-  renderOpponents();renderDeck();renderHand();renderAbility();renderLog();renderChat();renderCenterAction();renderThrowRing();
+  renderOpponents();renderDeck();renderHand();renderAbility();renderLog();renderChat();renderCenterAction();renderThrowRing();renderDrawTimer();
   const canKnock=myTurn()&&!state.drawn&&!state.knocked&&!state.ended&&mode==='idle';
   $('knockBtn').disabled=!canKnock;
   if(state.ended)showEnd();
@@ -556,14 +563,42 @@ function animateDraw(){
   const src=document.querySelector('#deck .card:last-child'),target=$('centerAction');
   if(!src||!target){mode='drawnMenu';render();return}
   drawAnimating=true;
+  target.classList.add('drawTransitHide');
   const a=src.getBoundingClientRect(),b=target.getBoundingClientRect(),el=document.createElement('div');
-  el.className='fly';el.innerHTML=card(null,true);
-  const bx=b.left+b.width/2-36, by=b.top;
+  el.className='fly smoothDraw';el.innerHTML=card(null,true);
+  const bx=b.left+b.width/2-36, by=b.top+b.height*.12;
   el.style.left=a.left+'px';el.style.top=a.top+'px';
   el.style.setProperty('--tx',(bx-a.left)+'px');el.style.setProperty('--ty',(by-a.top)+'px');
-  el.style.setProperty('--dx',((bx-a.left)*.45)+'px');el.style.setProperty('--dy',((by-a.top)-70)+'px');
+  el.style.setProperty('--dx',((bx-a.left)*.42)+'px');el.style.setProperty('--dy',((by-a.top)-75)+'px');
   document.body.appendChild(el);
-  setTimeout(()=>{el.remove();drawAnimating=false;mode='drawnMenu';render()},760);
+  setTimeout(()=>{el.remove();drawAnimating=false;target.classList.remove('drawTransitHide');mode='drawnMenu';render();target.classList.add('actionPing');setTimeout(()=>target.classList.remove('actionPing'),700)},1080);
+}
+function actionPointForPlayer(actorId){
+  if(actorId===state?.playerId){
+    const slot=document.querySelector('#hand .slot:last-child');
+    return slot || $('centerAction');
+  }
+  return document.querySelector(`.opp[data-pid="${CSS.escape(actorId||'')}"] .miniBack:last-child`) || document.querySelector(`.opp[data-pid="${CSS.escape(actorId||'')}"]`) || $('topOpps');
+}
+function animateRemoteAction(a){
+  if(!a||a.actorId===state?.playerId)return;
+  const src= a.type==='draw' ? document.querySelector('#deck .card:last-child') : actionPointForPlayer(a.actorId);
+  const dst= a.type==='draw' ? $('centerAction') : $('pile');
+  if(!src||!dst)return;
+  const s=src.getBoundingClientRect(),d=dst.getBoundingClientRect();
+  const el=document.createElement('div');el.className='fly remoteAction';el.innerHTML=card(null,true);
+  el.style.left=s.left+'px';el.style.top=s.top+'px';
+  const tx=d.left+d.width/2-36-s.left,ty=d.top+d.height/2-50-s.top;
+  el.style.setProperty('--tx',tx+'px');el.style.setProperty('--ty',ty+'px');el.style.setProperty('--dx',(tx*.48)+'px');el.style.setProperty('--dy',(ty-55)+'px');
+  document.body.appendChild(el);
+  if(a.type==='draw'){
+    setTimeout(()=>{
+      el.remove();
+      const mid=document.createElement('div');mid.className='fly remoteAction';mid.innerHTML=card(null,true);mid.style.left=(d.left+d.width/2-36)+'px';mid.style.top=(d.top+d.height*.18)+'px';
+      const pile=$('pile').getBoundingClientRect();const tx2=pile.left+pile.width/2-36-(d.left+d.width/2-36),ty2=pile.top+pile.height/2-50-(d.top+d.height*.18);
+      mid.style.setProperty('--tx',tx2+'px');mid.style.setProperty('--ty',ty2+'px');mid.style.setProperty('--dx',(tx2*.45)+'px');mid.style.setProperty('--dy',(ty2-35)+'px');document.body.appendChild(mid);setTimeout(()=>mid.remove(),820);
+    },1050);
+  } else setTimeout(()=>el.remove(),820);
 }
 function animateThrowFlourish(){
   if(throwCardIndex===null)return;
@@ -578,24 +613,20 @@ function animateThrowFlourish(){
   $('pile').classList.add('pop');setTimeout(()=>$('pile').classList.remove('pop'),450);
 }
 function revealCard(title,cards,canSwitch=false){const html=cards.map(x=>`<div><div class="revealMeta">${esc(x.owner)} · position ${x.index+1}</div><div class="flipWrap"><div class="flipInner"><div class="flipFace">${card(null,true)}</div><div class="flipFace flipFront">${card(x.card,false)}</div></div></div></div>`).join('');showModal(`<div class="modal"><div class="modalTitle">${esc(title)}</div><div class="modalSub">The selected card${cards.length>1?'s are':' is'} revealed for 4 seconds.</div><div class="revealGrid">${html}</div><div class="timerBar"></div></div>`);setTimeout(()=>{if(canSwitch){showModal(`<div class="modal"><div class="modalTitle">Switch the exact two cards?</div><div class="modalSub">Only the two cards you just inspected may be switched.</div><div class="choices"><button id="keepKing">Keep</button><button id="switchKing" class="goldBtn">Switch</button></div></div>`);$('keepKing').onclick=()=>{closeModal();socket.emit('kingChoice',{switchCards:false})};$('switchKing').onclick=()=>{closeModal();socket.emit('kingChoice',{switchCards:true})}}else closeModal()},4000)}
-function showRules(){
-  showModal(`<div class="modal rulesModal" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
-    <button id="rulesClose" class="rulesClose" type="button" aria-label="Close rules">×</button>
-    <div class="rulesHeader">
-      <div id="rulesTitle" class="modalTitle">How to Play Switchie</div>
-      <div class="rulesIntro">Keep your cards hidden, remember what you learn, and use the discard pile to make your moves. Positions never change during the game.</div>
-    </div>
-    <div class="rulesGrid">
-      <section class="ruleCard"><h3>Setup</h3><ul><li>A standard 52-card deck is used.</li><li>Each player starts with 4 cards face down in fixed positions.</li><li>You normally cannot look at your own hidden cards.</li><li>You may see a card when you draw it, use an ability, or reveal it after a failed throw.</li></ul></section>
-      <section class="ruleCard"><h3>Your Turn</h3><ul><li>Draw the top card and look at it.</li><li>Either discard the drawn card directly, or replace one hidden card in its exact position.</li><li>The old hidden card goes onto the discard pile.</li><li>Your remaining cards can never be rearranged.</li></ul></section>
-      <section class="ruleCard"><h3>Throw a Hidden Card</h3><ul><li>If one of your hidden cards matches the top discard by rank, throw it onto the pile.</li><li>A successful throw permanently removes that card.</li><li>If the throw is wrong, the thrown card is revealed to everyone.</li><li>You then take both the wrong card and the previous discard card, adding 2 cards to your hand.</li></ul></section>
-      <section class="ruleCard"><h3>Card Values</h3><ul><li>A = 1 · 2–10 = face value · J = 11 · Q = 12 · K = 13.</li><li>K♦ is worth −1 point when it remains face down at scoring.</li><li>The K♦ still has the King ability when drawn.</li></ul></section>
-      <section class="ruleCard"><h3>Special Abilities</h3><ul><li><strong>8 / 9 / 10:</strong> Look at one of your own hidden cards.</li><li><strong>J:</strong> Blindly switch one of your cards with another player's card.</li><li><strong>Q:</strong> Look at one of your cards and one opponent's card.</li><li><strong>K / K♦:</strong> Look at one of yours and one opponent's card, then optionally switch those exact cards.</li></ul><div class="ruleNote">Special abilities only activate when that special card is drawn and played directly onto the discard pile.</div></section>
-      <section class="ruleCard"><h3>Knock & Winning</h3><ul><li>If you believe your total is 4 points or fewer, you may knock instead of taking your turn.</li><li>After a knock, every other player gets one final turn.</li><li>Everyone then reveals their remaining cards and the lowest score wins.</li><li>If you successfully throw away your last card, you win immediately.</li></ul></section>
-    </div>
-  </div>`);
+function howToPlay(){
+  showModal(`<div class="modal rulesModal"><button id="rulesClose" class="modalClose" aria-label="Close rules">×</button><div class="modalTitle">How to Play Switchie</div><div class="modalSub">Hidden cards. Big moves.</div><div class="rulesGrid">
+    <div class="ruleBlock"><h3>Setup</h3><p>Everyone starts with 4 cards face down. Positions stay fixed and you normally cannot look at your own hidden cards.</p></div>
+    <div class="ruleBlock"><h3>Your Turn</h3><p>Draw the top card and look at it. Then either discard it, or replace one hidden card in that exact position. The old card goes to the discard pile.</p></div>
+    <div class="ruleBlock"><h3>Throwing</h3><p>If a hidden card matches the discard pile by rank, throw it onto the pile. A successful throw removes that card permanently.</p><p>If the throw is wrong, the thrown card is revealed and you take both the thrown card and the previous top card.</p></div>
+    <div class="ruleBlock"><h3>30-Second Decision</h3><p>After drawing, you have 30 seconds to decide. If time expires, the drawn card is automatically discarded and the turn advances.</p></div>
+    <div class="ruleBlock"><h3>Throw While Someone Decides</h3><p>While another player has a drawn card, other players may only throw a hidden card that matches the current discard pile. No other actions are available to them.</p></div>
+    <div class="ruleBlock"><h3>Knock</h3><p>If you believe your total is 4 points or fewer, you may knock. Your turn is skipped, everyone else gets one final turn, then all remaining cards are revealed and the lowest score wins.</p></div>
+    <div class="ruleBlock"><h3>Card Values</h3><p>A = 1 · 2–10 = face value · J = 11 · Q = 12 · K = 13. The King of Diamonds is −1 while face down.</p></div>
+    <div class="ruleBlock"><h3>Special Abilities</h3><ul><li>8 / 9 / 10: look at one of your cards.</li><li>J: blindly switch one of your cards with another player.</li><li>Q: look at one of yours and one opponent's card.</li><li>K: look at one of yours and one opponent's card, then optionally switch those exact two cards.</li></ul><p>Abilities only activate when the special card is drawn and played directly onto the pile.</p></div>
+  </div></div>`);
   $('rulesClose').onclick=closeModal;
 }
+
 function roomSettings(){
   const host=state?.playerId===state?.hostId;
   showModal(`<div class="modal"><div class="modalTitle">Room Settings</div><div class="modalSub">${host?'Edit your private table before the game starts.':'Only the host can edit room settings.'}</div><div style="display:grid;gap:8px"><input id="roomTitleInput" class="field" maxlength="32" value="${esc(state?.title&&state.title!==state.code?state.title:'Private Table')}" placeholder="Room name"><button id="saveRoomSettings" class="goldBtn" ${host&&!state.started?'':'disabled'}>Save Room Settings</button><button id="settingsAddAi" ${host&&!state.started?'':'disabled'}>Add AI Player</button><button id="settingsStart" class="primary" ${host&&!state.started&&players().length>=2?'':'disabled'}>Start Game</button></div></div>`);
@@ -617,11 +648,9 @@ $('sendChat').onclick=sendChat;$('chatInput').addEventListener('keydown',e=>{if(
 $('roomTab').onclick=()=>{chatMode='room';renderChat()};$('privateTab').onclick=()=>{chatMode='private';renderChat()};
 $('copy').onclick=async()=>{if(!state?.code)return;const url=`${location.origin}/?room=${state.code}`;try{await navigator.clipboard.writeText(url);toast('Private room invite copied.')}catch{toast(url)}};
 $('invite').onclick=()=>$('copy').click();
-$('addAi').onclick=()=>{if(!state)return toast('Join a room first.');if(state.playerId!==state.hostId)return toast('Only the host can add AI.');if(state.started)return toast('The game has already started.');socket.emit('addAI')};
-$('startGame').onclick=()=>{if(!state)return toast('Join a room first.');if(state.playerId!==state.hostId)return toast('Only the host can start the game.');if(state.started)return toast('The game has already started.');if(players().length<2)return toast('Add at least one friend or AI before starting.');socket.emit('start')};
-$('settings').onclick=roomSettings;
-$('howToPlay').onclick=showRules;
-$('leaveRoom').onclick=leaveRoom;
+$('addAi').onclick=()=>{if(state?.playerId===state?.hostId&&!state.started)socket.emit('addAI');else toast('Only the host can add AI before the game starts.')};
+$('startGame').onclick=()=>{if(state?.playerId!==state?.hostId)return toast('Only the host can start the game.');socket.emit('start')};
+$('settings').onclick=roomSettings;$('howToPlay').onclick=howToPlay;$('leaveRoom').onclick=leaveRoom;
 $('newGame').onclick=()=>{state=null;resetUiMode();closeModal();localStorage.removeItem('switchiePlayerId');localStorage.removeItem('switchieRoomCode');$('game').style.display='none';$('lobby').style.display='grid';$('name').focus()};
 document.querySelector('.feltWrap').addEventListener('click',()=>{ if(mode==='idle')return; if(state?.drawn && ['pickReplace','pickOwnForAbility','pickOpponent','pickOppCard'].includes(mode)){ mode='drawnMenu'; uiOwnIndex=null; uiTargetPlayer=null; } else { resetUiMode(); } render(); });
 document.querySelector('.stage').addEventListener('click',(e)=>{ if(e.target.classList.contains('stage')||e.target.classList.contains('piles')||e.target.id==='statusPill'){ if(mode==='idle')return; if(state?.drawn && ['pickReplace','pickOwnForAbility','pickOpponent','pickOppCard'].includes(mode)){ mode='drawnMenu'; uiOwnIndex=null; uiTargetPlayer=null; } else { resetUiMode(); } render(); } });
@@ -641,6 +670,7 @@ socket.on('state',x=>{
     render();
   }
 });
+socket.on('gameAction',a=>{ animateRemoteAction(a); });
 socket.on('privateChat',m=>{privateMessages.push(m);if(chatMode==='private')renderChat();toast(`Private message from ${m.from}`)});
 socket.on('errorMsg',x=>toast(x));
 socket.on('disconnect',()=>toast('Connection lost · reconnecting…'));
