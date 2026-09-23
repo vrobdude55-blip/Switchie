@@ -1,0 +1,127 @@
+/* Switchie visual pass v2: overlays only. The table-background.png asset is intentionally untouched. */
+
+/* Typography: warm serif treatment for menu selections and overlay titles, matching the supplied reference. */
+.panelTitle,.specialTitle,.menuGrid button,.codeLabel,.roomTitle,.turnTitle,.timerLabel,.pileLabel,.pileCount{
+  font-family: Georgia,"Times New Roman",serif!important;
+}
+.menuGrid button{font-weight:600!important;letter-spacing:.1px!important;color:#eee3cf!important;}
+.menuGrid button.active{color:#f3d27d!important;}
+
+/* Hide legacy overlays that are replaced by the cleaner reference treatment. */
+.statusPill,.ability,.knockPanel,.chatPanel{display:none!important;}
+
+/* Card Values + Special Cards: left side of the table. */
+.leftCol{left:1.35%!important;right:auto!important;top:13.8%!important;width:18.1%!important;height:auto!important;z-index:2400!important;pointer-events:none!important;}
+.leftCol .values{display:block!important;width:100%!important;height:auto!important;margin:0!important;padding:15px!important;pointer-events:auto!important;box-sizing:border-box!important;}
+.leftCol .values .valuesHeader{display:block!important;}
+.values .valuesMinBtn{display:none!important;}
+.values .panelTitle,.specialTitle,.logPanel .panelTitle{font-size:clamp(15px,1.05vw,19px)!important;font-weight:700!important;color:#efc86f!important;text-shadow:0 1px 2px #000!important;letter-spacing:.1px!important;}
+.valueRows,.specialRows{background:rgba(255,255,255,.025)!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:11px!important;overflow:hidden!important;box-shadow:inset 0 1px rgba(255,255,255,.03)!important;}
+.valueRows>div{min-height:29px!important;padding:6px 9px!important;border-bottom:1px solid rgba(255,255,255,.10)!important;font-size:clamp(10px,.68vw,13px)!important;}
+.valueRows>div:last-child,.specialRows>div:last-child{border-bottom:0!important;}
+.valueRows b{font-weight:500!important;color:#eee5d5!important;}
+.specialTitle{margin-top:13px!important;margin-bottom:8px!important;}
+.specialRows>div{display:grid!important;grid-template-columns:58px 1fr!important;gap:8px!important;align-items:center!important;min-height:36px!important;padding:6px 9px!important;border-bottom:1px solid rgba(255,255,255,.10)!important;font-size:clamp(9px,.62vw,12px)!important;line-height:1.2!important;}
+.specialRows span{color:#eee5d5!important;}
+.specialRows b{font-weight:400!important;color:#ddd6c8!important;}
+
+/* Game Log: right side. */
+.rightCol{right:1.35%!important;left:auto!important;top:53.5%!important;width:16.3%!important;height:24%!important;padding:0!important;display:block!important;z-index:2400!important;pointer-events:none!important;}
+.rightCol .logPanel{display:block!important;width:100%!important;height:100%!important;margin:0!important;padding:15px!important;box-sizing:border-box!important;pointer-events:auto!important;}
+.logPanel .log{height:calc(100% - 30px)!important;margin-top:0!important;overflow:hidden!important;}
+.logLine{font-size:clamp(9px,.65vw,12px)!important;line-height:1.28!important;padding:6px 2px!important;color:#ddd7ca!important;border-bottom:1px solid rgba(255,255,255,.09)!important;}
+.logLine:last-child{color:#eee0ad!important;font-weight:500!important;}
+
+/* Shared polished overlay language: rounded, layered, softer edges, subtle depth. */
+.panel,.roomMenu{
+  background:linear-gradient(145deg,rgba(10,9,7,.94),rgba(2,3,3,.96))!important;
+  border:1px solid rgba(190,151,76,.68)!important;
+  border-radius:18px!important;
+  box-shadow:0 18px 38px rgba(0,0,0,.58),0 2px 0 rgba(255,255,255,.035) inset,0 -2px 0 rgba(0,0,0,.28) inset!important;
+  backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important;
+}
+
+/* Your Turn: the timer is now the single home for the throw countdown too. */
+.drawTimer{
+  display:none;
+  position:absolute!important;
+  top:28.6%!important;
+  left:68.0%!important;
+  transform:perspective(900px) translate(-50%,0) rotateX(5deg) rotateZ(-2.4deg)!important;
+  transform-origin:center bottom!important;
+  width:194px!important;min-width:194px!important;
+  padding:11px 12px 13px!important;
+  border:1px solid rgba(190,151,76,.72)!important;
+  border-radius:17px!important;
+  background:linear-gradient(145deg,rgba(12,10,8,.96),rgba(3,3,3,.95))!important;
+  box-shadow:0 20px 36px rgba(0,0,0,.62),12px 10px 0 rgba(0,0,0,.10),inset 0 1px rgba(255,255,255,.07)!important;
+  color:#f1e9dc!important;z-index:2500!important;
+}
+.drawTimer.show{display:block!important;}
+.turnTitle{font-size:clamp(12px,.82vw,15px)!important;font-weight:500!important;color:#f3ede3!important;margin-bottom:7px!important;letter-spacing:.1px!important;text-align:center!important;}
+.timerCircle{position:relative!important;width:92px!important;height:92px!important;margin:0 auto 8px!important;border-radius:50%!important;background:radial-gradient(circle at center,rgba(18,17,15,.98) 0 66%,transparent 67%)!important;border:2px solid #e0b65a!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0 18px rgba(224,182,90,.16)!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;}
+.timerNum{font-size:34px!important;line-height:1!important;font-weight:700!important;color:#f7f3ed!important;margin:0!important;}
+.timerUnit{font-size:11px!important;color:#ddd5c7!important;margin-top:2px!important;}
+.timerLabel{display:block!important;margin:0 -12px -13px!important;padding:10px 12px!important;border-top:1px solid rgba(190,151,76,.45)!important;border-radius:0 0 17px 17px!important;background:linear-gradient(180deg,rgba(29,20,10,.92),rgba(10,8,6,.95))!important;color:#e9c76e!important;font-size:clamp(9px,.63vw,12px)!important;line-height:1.25!important;font-weight:500!important;text-align:center!important;}
+.drawTimer.urgent .timerCircle{animation:referenceTimerPulse .6s ease-in-out infinite alternate!important;}
+.drawTimer.throwWindow .timerCircle{border-color:#efc86f!important;}
+@keyframes referenceTimerPulse{from{box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0 12px rgba(224,182,90,.12)}to{box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0 25px rgba(224,182,90,.36)}}
+
+/* Hamburger room menu, same visual language as the overlays. */
+.roomMenu{top:1.7%!important;right:1.2%!important;width:54px!important;min-height:54px!important;padding:7px!important;overflow:visible!important;transition:width .22s ease,background .22s ease!important;}
+.roomMenuToggle{display:flex!important;width:38px!important;height:38px!important;min-height:38px!important;padding:8px!important;margin:0 auto!important;flex-direction:column!important;justify-content:center!important;gap:5px!important;background:transparent!important;border:1px solid rgba(224,188,97,.28)!important;border-radius:10px!important;box-shadow:none!important;}
+.roomMenuToggle span{display:block!important;width:20px!important;height:2px!important;margin:auto!important;border-radius:2px!important;background:#efc86f!important;box-shadow:0 1px 2px #000!important;}
+.roomMenu:not(.open) .codeRow,.roomMenu:not(.open) .menuGrid{display:none!important;}
+.roomMenu.open{width:238px!important;}
+.roomMenu.open .roomMenuToggle{margin:0 0 6px auto!important;}
+.roomMenu.open .codeRow,.roomMenu.open .menuGrid{display:flex!important;}
+.roomMenu.open .menuGrid{display:grid!important;}
+.menuGrid{gap:2px!important;padding-top:5px!important;}
+.menuGrid button{font-size:clamp(10px,.7vw,14px)!important;min-height:27px!important;padding:6px 10px!important;border-radius:9px!important;}
+.menuGrid button:hover{background:rgba(255,255,255,.055)!important;}
+
+/* Deeper, more physical deck/discard perspective. */
+.piles{gap:12vw!important;}
+.stack{perspective:1400px!important;transform-style:preserve-3d!important;filter:drop-shadow(10px 15px 16px rgba(0,0,0,.58))!important;}
+.pileGroup:nth-child(1) .stack{transform:perspective(1400px) rotateX(11deg) rotateY(-2deg) rotateZ(6deg)!important;}
+.pileGroup:nth-child(2) .stack{transform:perspective(1400px) rotateX(9deg) rotateY(1deg) rotateZ(-4deg)!important;}
+.pileGroup .stack .card:nth-child(1){transform:translate(17px,17px) rotateZ(1.7deg)!important;filter:brightness(.40)!important;}
+.pileGroup .stack .card:nth-child(2){transform:translate(13px,13px) rotateZ(.9deg)!important;filter:brightness(.50)!important;}
+.pileGroup .stack .card:nth-child(3){transform:translate(9px,9px) rotateZ(.4deg)!important;filter:brightness(.61)!important;}
+.pileGroup .stack .card:nth-child(4){transform:translate(5px,5px)!important;filter:brightness(.72)!important;}
+.pileGroup .stack .card:nth-child(5){transform:translate(2px,2px) rotateZ(-.3deg)!important;filter:brightness(.84)!important;}
+.pileGroup .stack .card:nth-child(6){transform:none!important;filter:none!important;}
+.pileLabel{margin-top:26px!important;}
+.pileCount{margin-top:4px!important;}
+
+/* Remove the old bottom action strip completely. */
+.referenceActions{display:none!important;}
+
+/* Keep hand cards clickable above decorative overlays. */
+#hand{z-index:4700!important;pointer-events:auto!important;}
+#hand .slot{z-index:4710!important;pointer-events:auto!important;cursor:pointer!important;touch-action:manipulation!important;}
+#hand .slot .card{pointer-events:auto!important;}
+#hand .slot:hover{filter:drop-shadow(0 8px 14px rgba(0,0,0,.65))!important;}
+
+@media(max-width:1000px){
+  .leftCol{width:21%!important;top:12%!important;}
+  .rightCol{width:19%!important;}
+  .drawTimer{left:65%!important;}
+}
+@media(max-width:700px){
+  .rightCol,.leftCol{display:none!important;}
+  .drawTimer{left:67%!important;transform:perspective(900px) translate(-50%,0) rotateX(4deg) rotateZ(-2deg)!important;width:174px!important;min-width:174px!important;}
+}
+
+/* ===== Final interaction contract: reference layer =====
+   Decorative layers never intercept input. Interactive visuals own their hit area. */
+.stage,.stage::before,.stage::after,.feltWrap::before,.feltWrap::after,.table::before,.table::after{pointer-events:none!important;}
+.stage > *{pointer-events:auto;}
+.stage button,.stage [role="button"],.stage .interactive,.stage .piles,.stage .pileGroup,.stage .stack,.stage .drawTimer,.stage .centerAction,.stage .centerAction *{pointer-events:auto!important;}
+#hand{position:relative;z-index:4700!important;pointer-events:auto!important;}
+#hand .slot{position:relative;z-index:4710!important;pointer-events:auto!important;touch-action:manipulation;}
+#hand .slot .card{pointer-events:auto!important;}
+.stack .card::before,.stack .card::after,.card.back::before,.card.back::after,.card.face::before{pointer-events:none!important;}
+.roomMenu,.topOpps,.leftCol,.rightCol{isolation:isolate;}
+.roomMenu button,.topOpps .opp,.topOpps .miniBack,.leftCol button,.rightCol button,.rightCol input,.rightCol select,.rightCol textarea{pointer-events:auto!important;}
+.statusPill,.tagline,.pileLabel,.pileCount,.slotNum,.drawTimer .turnTitle,.drawTimer .timerCircle,.drawTimer .timerLabel{pointer-events:none!important;}

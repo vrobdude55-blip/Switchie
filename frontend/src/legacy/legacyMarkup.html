@@ -1,0 +1,68 @@
+<div id="lobby" class="lobby">
+  <div class="lobbyCard">
+    <div class="lobbyLogo">Switchie</div><div class="lobbyTag">HIDDEN CARDS. BIG MOVES.</div>
+    <div class="form"><input id="name" class="field" placeholder="Your name" maxlength="20"><input id="code" class="field" placeholder="Room code"></div>
+    <div class="lobbyActions"><button id="create" class="primary">Create Room</button><button id="join" class="goldBtn">Join Room</button></div>
+    <div class="lobbyHint">Create a private room, invite friends with the room code, or join an existing game. AI can be added by the host.</div>
+  </div>
+</div>
+<div id="game" class="app" style="display:none">
+  <div class="table">
+    <div class="feltWrap"></div>
+    <div class="shell">
+      <header class="header">
+        <div class="brand"><div class="logo">Switchie</div><div class="tag">HIDDEN CARDS. BIG MOVES.</div></div>
+        <div id="topOpps" class="topOpps"></div>
+        <div id="roomMenu" class="roomMenu">
+          <button id="roomMenuToggle" class="roomMenuToggle" type="button" aria-label="Open room menu" aria-expanded="false"><span></span><span></span><span></span></button>
+          <div class="codeRow"><div><div class="codeLabel">ROOM CODE</div><div id="roomCode" class="code">------</div><div id="roomTitle" class="roomTitle">Private Table</div></div><button id="copy" class="copy">▣</button></div>
+          <div class="menuGrid"><button id="newGame"><span class="mi">♦</span>New Game</button><button id="invite"><span class="mi">⌁</span>Invite Friends</button><button id="addAi"><span class="mi">♟</span>Add AI Player</button><button id="startGame" class="active"><span class="mi">▶</span>Start Game</button><button id="settings"><span class="mi">⚙</span>Settings</button><button id="howToPlay"><span class="mi">?</span>How to Play</button><button id="leaveRoom"><span class="mi">↩</span>Leave Room</button></div>
+        </div>
+      </header>
+      <div class="content">
+        <aside class="leftCol">
+          <section class="panel chatPanel">
+            <div class="panelTitle">Room Chat</div>
+            <div class="chatTabs"><button id="roomTab" class="active">Room</button><button id="privateTab">Private</button></div>
+            <div id="privateRow" class="privateRow" style="display:none"><select id="privateTo"></select></div>
+            <div id="chatMessages" class="chatMessages scroll"></div>
+            <div class="chatForm"><input id="chatInput" placeholder="Type a message..." maxlength="240"><button id="sendChat" class="send goldBtn">➤</button></div>
+          </section>
+          <section class="panel values" id="valuesPanel"><div class="valuesSection"><div class="valuesHeader"><div class="panelTitle">Card Values</div><button id="valuesMinBtn" class="valuesMinBtn" type="button" aria-label="Minimize Card Values and Special Cards" aria-expanded="true">−</button></div><div class="valueRows"><div><span>A</span><b>1</b></div><div><span>2 – 10</span><b>Face value</b></div><div><span>J</span><b>11</b></div><div><span>Q</span><b>12</b></div><div><span>K</span><b>13</b></div><div class="negative"><span>K♦</span><b>−1 while face down</b></div></div></div><div class="specialSection"><div class="specialTitle">Special Cards</div><div class="specialRows"><div><span>8 / 9 / 10</span><b>Look at one of your cards</b></div><div><span>J</span><b>Blindly switch one of your cards with another player</b></div><div><span>Q</span><b>Look at one of yours and one opponent's card</b></div><div><span>K / K♦</span><b>Look at one of yours and one opponent's card, then optionally switch those exact cards</b></div></div></div></section>
+        </aside>
+        <main class="center"><div class="stage">
+          <div class="statusPill" id="statusPill">Waiting for the game to start.</div><div id="drawTimer" class="drawTimer"><div id="turnTitle" class="turnTitle">Your turn</div><div class="timerCircle"><span id="drawTimerNum" class="timerNum">15</span><span class="timerUnit">s</span></div><div id="drawTimerLabel" class="timerLabel">Draw a card, take an action or knock.</div></div>
+          <div class="piles">
+            <div class="pileGroup"><div id="deck" class="stack"></div><div class="pileLabel">Draw Pile</div><div id="deckCount" class="pileCount">52 cards left</div>
+            </div>
+            <div class="pileGroup"><div id="pile" class="stack"></div><div class="pileLabel">Discard Pile</div></div>
+          </div>
+          <div class="tagline">Know. Switch. Win.</div>
+          <div id="centerAction" class="centerAction hidden"></div>
+        </div></main>
+        <aside class="rightCol">
+          <section class="panel ability"><div class="panelTitle">Current Card Ability</div><div class="abilityRow"><div id="abilityCard"></div><div id="abilityText" class="abilityText">Draw a special card to reveal its ability.</div></div></section>
+          <section class="panel knockPanel"><button id="knockBtn" class="danger knockBtn">⚑ Knock</button></section>
+          <section class="panel logPanel"><div class="panelTitle">Game Log</div><div id="log" class="log scroll"></div></section>
+        </aside>
+      </div>
+      <footer class="bottom">
+        <div class="playerIdentity"><div id="youTitle" class="youTitle">Player</div><div id="youCount" class="youCount">4 cards</div></div>
+        <div id="hand" class="hand"></div>
+        <div class="footerRule">Your positions never move.<br>A successful throw removes the card.<br>A wrong throw adds two cards.</div>
+        <div class="footerPill">HIDDEN INFORMATION. REAL FRIENDSHIPS.</div>
+      </footer>
+    </div>
+  </div>
+</div>
+
+<div id="editToolbar" aria-label="Switchie layout editor">
+  <span class="editLabel">EDIT MODE</span><span id="editSelectionName" class="editLabel" style="opacity:.65">Nothing selected</span><span class="editSep"></span>
+  <button id="editToggleText" type="button">Edit Text</button><button id="editReset" type="button">Reset Selected</button><button id="editResetAll" type="button">Reset All</button><span class="editSep"></span>
+  <button id="editImport" type="button">Import</button><button id="editExport" type="button" class="goldBtn">Export Layout</button><button id="editDone" type="button" class="primary">Done</button>
+  <input id="editFile" type="file" accept="application/json" style="display:none">
+</div>
+<div id="editHint">Drag = move · corner = scale · gold dot = rotate · double-click text = edit</div>
+<div id="editTextPanel"><div class="editTextTitle">Edit text</div><textarea id="editTextArea"></textarea><div class="editTextRow"><button id="editTextApply" class="goldBtn" type="button">Apply</button><button id="editTextCancel" type="button">Cancel</button></div></div>
+<div id="editorOverlay"><div id="editorHandles" class="editorHandles"><div class="editorBox"></div><div class="editorHandle nw" data-handle="nw"></div><div class="editorHandle ne" data-handle="ne"></div><div class="editorHandle sw" data-handle="sw"></div><div class="editorHandle se" data-handle="se"></div><div class="editorRotate" data-handle="rotate" title="Rotate"></div></div></div>
+<div id="modalHost" class="modalHost"></div><div id="toast" class="toast"></div>

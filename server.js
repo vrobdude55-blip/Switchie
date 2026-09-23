@@ -1,12 +1,14 @@
 import express from 'express';
 import http from 'http';
 import crypto from 'crypto';
+import fs from 'fs';
 import { Server } from 'socket.io';
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: true, credentials: true } });
-app.use(express.static('public'));
+const staticDir = fs.existsSync('dist') ? 'dist' : 'public';
+app.use(express.static(staticDir));
 
 const rooms = new Map();
 const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
