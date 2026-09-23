@@ -6,161 +6,281 @@
 <title>Switchie</title>
 <script src="/socket.io/socket.io.js"></script>
 <style>
-:root{--felt:#07513e;--felt2:#032d23;--felt3:#011d18;--wood:#32170a;--wood2:#6b3517;--wood3:#a6632c;--gold:#d6b15d;--gold2:#ffe49a;--cream:#f6edd7;--muted:#b9b092;--panel:rgba(3,10,8,.86);--line:rgba(221,185,98,.52);--blue:#153d72;--blue2:#4e82c2;--red:#a52a24;--green:#0b6c52}
-*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden}body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--cream);background:#090503}
-button,input{font:inherit}button{color:var(--cream);border:1px solid rgba(231,199,122,.34);background:linear-gradient(180deg,#1b211c,#0b120e);border-radius:8px;min-height:34px;padding:7px 10px;cursor:pointer;box-shadow:inset 0 1px rgba(255,255,255,.09),0 5px 12px #0008;transition:transform .18s ease,filter .18s ease,box-shadow .22s ease,border-color .22s ease,background .22s ease}button:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.12);box-shadow:0 7px 18px #0009,inset 0 1px #fff2}button:active:not(:disabled){transform:translateY(0) scale(.985)}button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}.primary{background:linear-gradient(180deg,#287dc6,#12406b);border-color:#6aa9e8;box-shadow:0 0 18px #247edb33}.goldBtn{background:linear-gradient(180deg,#957531,#4b3711);border-color:#e8c969;box-shadow:0 0 16px #d5ad4a33}.danger{background:linear-gradient(180deg,#bd3a32,#741611);border-color:#ee7866}.ghost{background:rgba(0,0,0,.25);box-shadow:none}
-.app{width:100%;height:100%;padding:8px;background:radial-gradient(circle at 50% 0,#6d3c1b 0,#1a0d06 38%,#070403 100%)}.table{position:relative;width:100%;height:100%;overflow:hidden;border:7px solid #251207;border-radius:22px;padding:10px;background:radial-gradient(ellipse at 50% 45%,#087157 0,#04523f 48%,#022d23 100%);box-shadow:inset 0 0 0 2px #e2bd5a2b,inset 0 0 95px #000b,0 20px 60px #000d}.table:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,transparent 37%,#0008 100%),repeating-linear-gradient(8deg,#fff004 0 2px,transparent 2px 8px);opacity:.13}.table:after{content:"♠";position:absolute;left:51%;top:49%;transform:translate(-50%,-50%);font-size:180px;color:#d5b65b0d;pointer-events:none}
-.shell{position:relative;z-index:2;height:100%;display:grid;grid-template-rows:76px 1fr 145px;gap:7px}.header{display:grid;grid-template-columns:290px 1fr 230px;gap:8px;align-items:start}.brand{padding:0 0 0 7px}.logo{font:700 clamp(46px,5.2vw,70px)/.72 Georgia,"Times New Roman",serif;letter-spacing:-5px;color:#f0d28d;text-shadow:0 6px 12px #000c;position:relative;display:inline-block}.logo:before{content:"♠";position:absolute;left:47%;top:-23px;font-size:30px;letter-spacing:0}.tag{font-size:9px;letter-spacing:3px;margin:9px 0 0 3px;color:#ddcd9f;text-shadow:0 2px 4px #000}
-.topOpps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-self:start}.opp{padding:7px 9px;background:linear-gradient(145deg,#07140fdd,#020806d9);border:1px solid var(--line);border-radius:11px;box-shadow:0 9px 22px #0008;min-width:0;transition:.35s ease}.opp.active{border-color:var(--gold2);box-shadow:0 0 22px #f2d07033,0 9px 22px #0009;transform:translateY(-2px)}.oppHead{display:flex;align-items:center;justify-content:space-between;gap:7px}.identity{display:flex;align-items:center;gap:7px;min-width:0}.avatar{position:relative;width:31px;height:31px;flex:0 0 31px;border:1px solid var(--gold);border-radius:50%;background:radial-gradient(circle at 50% 33%,#bda887 0 16%,transparent 17%),radial-gradient(ellipse at 50% 91%,#bda887 0 28%,transparent 29%),radial-gradient(circle,#433b30,#15130f 72%);box-shadow:0 2px 10px #0009}.name{font:700 12px Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cardsCount{font-size:9px;color:#cbbd99}.statusText{font-size:8px;color:#8d938a}.statusText.ai{color:#d9c275}.miniHand{display:flex;justify-content:center;gap:3px;margin-top:6px;min-height:42px}.miniBack{width:31px;height:43px;border:2px solid #f0e9dc;border-radius:5px;background:linear-gradient(135deg,#0f2e5c,#345f95 48%,#0a2750);position:relative;box-shadow:2px 4px 7px #0009;overflow:hidden;transition:.25s ease}.miniBack:before{content:"";position:absolute;inset:3px;border:1px solid #e7d5aaab;background:repeating-linear-gradient(45deg,transparent 0 3px,#ead9b01b 4px 5px),repeating-linear-gradient(-45deg,transparent 0 3px,#ead9b012 4px 5px)}.miniBack:after{content:"♠";position:absolute;inset:0;display:grid;place-items:center;color:#e0c36d;font-size:13px;text-shadow:0 2px 3px #000}.miniBack:nth-child(even){transform:rotate(1.4deg)}.miniBack:nth-child(3n){transform:rotate(-1.4deg)}
-.roomMenu{justify-self:end;width:230px;background:linear-gradient(145deg,#050a08f2,#010403eb);border:1px solid var(--line);border-radius:11px;box-shadow:0 12px 28px #000b;padding:5px}.codeRow{display:flex;align-items:center;justify-content:space-between;padding:5px 7px 7px;border-bottom:1px solid #ffffff12}.codeLabel{font-size:8px;letter-spacing:1.2px;color:#e1ce96}.code{font-size:19px;font-weight:800;letter-spacing:2px}.copy{width:34px;min-height:30px;padding:0;font-size:17px}.menuGrid{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding-top:3px}.menuGrid button{border:0;box-shadow:none;background:transparent;text-align:left;font-size:9px;min-height:29px}.menuGrid button:hover{background:#fff1;transform:none}.mi{color:var(--gold);width:17px;display:inline-block}
-.content{min-height:0;display:grid;grid-template-columns:255px minmax(400px,1fr) 315px;gap:9px}.leftCol,.rightCol{min-height:0;display:flex;flex-direction:column;gap:8px}.panel{background:linear-gradient(145deg,#040e0bdc,#010705d9);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px #0007,inset 0 1px #fff08;backdrop-filter:blur(2px)}.panelTitle{font:700 16px Georgia,serif;color:#ead294}.logPanel{flex:1;min-height:0;padding:9px}.scroll{overflow:hidden}.log{height:calc(100% - 23px);margin-top:4px}.logLine{font-size:9.5px;line-height:1.25;padding:5px 3px;border-bottom:1px solid #ffffff0c}.logLine:last-child{color:#f0d887;font-weight:700}.chatPanel{height:42%;min-height:125px;padding:9px;display:flex;flex-direction:column}.chatTabs{display:flex;gap:4px;margin:5px 0}.chatTabs button{min-height:27px;padding:4px 8px;font-size:8px;box-shadow:none}.chatTabs button.active{background:#765c20;border-color:#e5c36d}.chatMessages{flex:1;min-height:0;overflow:hidden}.msg{display:flex;gap:6px;margin:4px 0;align-items:flex-start}.msg .bubble{background:#0d2730;border:1px solid #4d809050;border-radius:9px;padding:5px 7px;font-size:9px;max-width:175px}.msg .bubble.private{background:#3a2a10;border-color:#d0aa5d55}.msgMeta{font-size:7px;color:#8d9288;margin-top:1px}.chatForm{display:flex;gap:5px;margin-top:5px}.chatForm input{flex:1;min-width:0;background:#020807;border:1px solid #d9b95d55;color:var(--cream);border-radius:7px;padding:7px 8px;font-size:9px;outline:none}.chatForm input:focus{border-color:var(--gold2);box-shadow:0 0 0 2px #e5c87522}.send{width:35px;min-height:32px;padding:0}.privateRow{display:flex;gap:5px;margin-bottom:3px}.privateRow select{flex:1;background:#07100d;color:var(--cream);border:1px solid #d9b95d55;border-radius:7px;font-size:8px;padding:5px}
-.center{position:relative;min-height:0;display:flex;align-items:center;justify-content:center}.stage{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}.tagline{position:absolute;right:12%;top:51%;font:italic 16px Georgia,serif;color:#d3b969a8;transform:rotate(-8deg)}.stage:after{content:"♠";position:absolute;right:12%;top:38%;font-size:58px;color:#d4b65a2a;transform:rotate(4deg)}.piles{display:flex;align-items:center;gap:54px;transform:translateY(5px)}.pileGroup{text-align:center;position:relative}.pileLabel{margin-top:7px;font:700 13px Georgia,serif;color:#e2c779}.pileCount{font-size:9px;color:#c9bb95;margin-top:2px}.stack{position:relative;width:90px;height:120px}.stack .card{position:absolute;left:0;top:0}.stack .card:nth-child(1){transform:translate(10px,10px);filter:brightness(.5)}.stack .card:nth-child(2){transform:translate(7px,7px);filter:brightness(.64)}.stack .card:nth-child(3){transform:translate(4px,4px);filter:brightness(.78)}.stack .card:nth-child(4){transform:none}.drawnBox{width:118px;min-height:102px;margin-left:22px;border:1px solid #d9b95d44;border-radius:10px;background:#03100bd8;display:grid;place-items:center;padding:9px;box-shadow:0 8px 20px #0006}.drawnBox.empty{font-size:9px;color:#a49a7f}.drawnBox .card{animation:cardFloat 2.8s ease-in-out infinite}.rightCol .panel{padding:9px}.ability{min-height:106px}.abilityRow{display:flex;gap:9px;align-items:center;margin-top:7px}.abilityText{font-size:9px;line-height:1.35}.actions{min-height:160px}.actionGrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px}.actionGrid button{font-size:8px;min-height:38px}.hint{font-size:8px;color:#a9a18b;margin-top:5px;line-height:1.25}.values{flex:1;min-height:0}.valuesText{font-size:8.5px;line-height:1.45;color:#d5ccb1;margin-top:7px}.valuesText strong{color:#f0d384}.ruleLine{margin-top:5px}
-.bottom{position:relative;min-height:0;border:1px solid #d6a94f99;border-radius:58px 58px 18px 18px;background:linear-gradient(180deg,#5b3017f2,#211108f7);box-shadow:inset 0 2px #ffe6a62b,0 -12px 34px #0008;padding:9px 32px 7px;display:grid;grid-template-columns:145px 1fr 145px;align-items:center;gap:12px}.bottom:before{content:"";position:absolute;left:18px;right:18px;top:5px;height:2px;background:linear-gradient(90deg,transparent,#f3cd79aa,transparent);border-radius:50%}.youTitle{font:700 21px Georgia,serif}.youCount{font-size:10px;color:#d4c59f;margin-top:2px}.hand{display:flex;align-items:center;justify-content:center;gap:11px;min-width:0}.slot{position:relative;width:79px;height:110px;transition:transform .24s ease,filter .24s ease}.slot:hover{transform:translateY(-7px)}.slot.selected{transform:translateY(-11px);filter:drop-shadow(0 0 13px #ffdb70)}.slot.selected .card{border-color:#ffe49a;box-shadow:0 0 0 2px #d6a94f,0 0 20px #f4d06c99,5px 10px 15px #000a}.slotNum{position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);font-size:8px;color:#cdbf9a}.footerRule{text-align:right;font-size:7.5px;line-height:1.3;color:#cdbf9a}.footerPill{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);border:1px solid #d6ad5c66;border-radius:999px;padding:3px 23px;background:#160b05dd;color:#d6b765;font-size:7px;letter-spacing:1.6px;white-space:nowrap}
-.card{width:72px;height:101px;border-radius:8px;position:relative;overflow:hidden;box-shadow:5px 9px 15px #000a;font-family:Georgia,serif;font-weight:700}.card.back{border:3px solid #f2e9dc;background:linear-gradient(135deg,#102f60,#345f95 50%,#0c2852);outline:1px solid #0a1d3c;color:#e2c36d;display:grid;place-items:center}.card.back:before{content:"";position:absolute;inset:5px;border:1px solid #ead8b5dd;border-radius:4px;background:repeating-linear-gradient(45deg,transparent 0 4px,#ead8b01b 5px 6px),repeating-linear-gradient(-45deg,transparent 0 4px,#ead8b012 5px 6px)}.card.back:after{content:"♠";position:relative;z-index:2;border:1px solid #e2c36d;border-radius:50%;padding:5px 10px;background:#10274ddf;box-shadow:0 0 0 3px #153661}.card.face{background:linear-gradient(145deg,#fffdf9,#e9e4d9);border:2px solid #f5efe2;color:#111;padding:4px;display:flex;flex-direction:column;justify-content:space-between}.card.face.red{color:#bd2430}.corner{line-height:13px;font-size:14px;z-index:2}.suit{font-size:35px;align-self:center;margin:auto;z-index:2}.rot{transform:rotate(180deg);align-self:flex-end}.card.face:before{content:"";position:absolute;inset:3px;border:1px solid #0002;border-radius:5px}.card.small{width:53px;height:75px}.card.small .corner{font-size:10px;line-height:9px}.card.small .suit{font-size:23px}.card.tiny{width:40px;height:56px}.card.tiny .corner{font-size:8px;line-height:7px}.card.tiny .suit{font-size:18px}
-.fly{position:fixed;z-index:1000;pointer-events:none;animation:fly .72s cubic-bezier(.18,.82,.25,1) forwards;transform-origin:center}.fly .card{width:72px;height:101px}.pop{animation:pilePop .45s ease}.cardEnter{animation:cardEnter .42s cubic-bezier(.2,.8,.2,1)}
-.modalHost{position:fixed;inset:0;z-index:2000;display:none;place-items:center;background:#0008;backdrop-filter:blur(4px)}.modalHost.open{display:grid}.modal{width:min(470px,88vw);background:linear-gradient(145deg,#0b1511f7,#020705f7);border:1px solid #e4bd65;border-radius:13px;box-shadow:0 25px 70px #000d,0 0 35px #d3ad5220;padding:18px;animation:modalIn .24s ease}.modalTitle{font:700 20px Georgia,serif;color:#efd28a;text-align:center}.modalSub{font-size:10px;color:#c9c0a9;text-align:center;margin:6px 0 12px}.choices{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}.choices button{min-width:52px}.timerBar{height:3px;background:#e3be65;margin-top:15px;transform-origin:left;animation:timer 4s linear forwards}.flipWrap{perspective:1000px;width:86px;height:120px;margin:auto}.flipInner{width:100%;height:100%;position:relative;transform-style:preserve-3d;animation:flipReveal .8s cubic-bezier(.2,.8,.2,1) forwards}.flipFace{position:absolute;inset:0;backface-visibility:hidden}.flipFront{transform:rotateY(180deg)}.revealGrid{display:flex;justify-content:center;gap:28px}.revealMeta{text-align:center;font-size:8px;color:#c8be9f;margin-top:5px}
-.lobby{position:fixed;inset:0;z-index:3000;display:grid;place-items:center;background:radial-gradient(circle at 50% 25%,#0b7457,#022e24 58%,#070403);padding:20px}.lobbyCard{width:min(620px,94vw);background:linear-gradient(145deg,#07140ff5,#020706f7);border:1px solid #d9b65d77;border-radius:18px;padding:28px;box-shadow:0 30px 90px #000d,0 0 45px #d1ad4b18;text-align:center}.lobbyLogo{font:700 clamp(52px,8vw,82px)/.8 Georgia,serif;color:#efd18a;letter-spacing:-6px;text-shadow:0 7px 18px #000}.lobbyTag{font-size:10px;letter-spacing:4px;color:#d5c391;margin:9px 0 24px}.form{display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left}.field{background:#020807;border:1px solid #d9b95d55;color:var(--cream);border-radius:9px;padding:10px 11px;outline:none;width:100%;font-size:12px}.field:focus{border-color:var(--gold2);box-shadow:0 0 0 2px #e5c87522}.lobbyActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.lobbyHint{font-size:9px;color:#aaa38d;margin-top:15px}.toast{position:fixed;left:50%;bottom:22px;z-index:5000;transform:translate(-50%,15px);background:#030806f5;border:1px solid #e0bd64aa;border-radius:9px;padding:8px 13px;font-size:9px;opacity:0;pointer-events:none;transition:.25s}.toast.show{opacity:1;transform:translate(-50%,0)}
-@keyframes fly{0%{transform:translate(0,0) rotate(0) scale(.86);opacity:0}12%{opacity:1}45%{transform:translate(var(--dx),var(--dy)) rotate(-9deg) scale(1.06)}100%{transform:translate(var(--tx),var(--ty)) rotate(0) scale(1);opacity:.96}}@keyframes pilePop{0%,100%{transform:scale(1)}45%{transform:scale(1.12) rotate(-2deg)}}@keyframes cardEnter{from{opacity:0;transform:translateY(12px) scale(.92) rotate(-3deg)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}@keyframes timer{from{transform:scaleX(1)}to{transform:scaleX(0)}}@keyframes flipReveal{0%{transform:rotateY(0)}100%{transform:rotateY(180deg)}}@keyframes cardFloat{0%,100%{transform:translateY(0) rotate(.2deg)}50%{transform:translateY(-4px) rotate(-.2deg)}}
-@media(max-width:1100px){.header{grid-template-columns:230px 1fr 195px}.content{grid-template-columns:205px minmax(330px,1fr) 270px}.roomMenu{width:195px}.bottom{grid-template-columns:110px 1fr 110px}.slot{width:67px;height:96px}.card{width:62px;height:88px}.hand{gap:7px}.chatPanel{height:44%}}
-@media(max-width:850px){.app{padding:0}.table{border-width:3px;border-radius:0;padding:7px}.shell{grid-template-rows:62px 1fr 112px}.header{grid-template-columns:150px 1fr 165px}.logo{font-size:44px}.tag{font-size:7px;letter-spacing:2px}.topOpps{gap:4px}.opp{padding:5px}.avatar{width:24px;height:24px;flex-basis:24px}.name{font-size:9px}.miniBack{width:23px;height:33px}.content{grid-template-columns:175px minmax(280px,1fr) 225px;gap:5px}.bottom{grid-template-columns:85px 1fr 85px;padding:7px 14px}.slot{width:54px;height:78px}.card{width:54px;height:76px}.hand{gap:4px}.youTitle{font-size:16px}.footerRule{font-size:6px}.panelTitle{font-size:13px}.logLine,.valuesText,.abilityText{font-size:7.5px}.actionGrid button{font-size:7px;min-height:32px}.roomMenu{width:165px}.menuGrid button{font-size:8px}.code{font-size:15px}}
-@media(max-width:680px){.shell{grid-template-rows:52px 1fr 94px}.header{grid-template-columns:115px 1fr 125px}.logo{font-size:34px;letter-spacing:-3px}.tag{display:none}.topOpps{display:none}.roomMenu{width:125px}.menuGrid{grid-template-columns:1fr}.menuGrid button:nth-child(n+3){display:none}.codeLabel{display:none}.content{grid-template-columns:135px minmax(180px,1fr) 145px;gap:4px}.chatPanel{height:44%}.panel{border-radius:8px}.piles{gap:15px}.drawnBox{display:none}.tagline{font-size:10px}.stage:after{font-size:42px}.bottom{grid-template-columns:62px 1fr 62px;padding:5px 8px}.slot{width:45px;height:64px}.card{width:45px;height:63px}.hand{gap:2px}.youTitle{font-size:12px}.youCount{font-size:7px}.footerRule{font-size:5px}.footerPill{font-size:5px}.actionGrid{gap:3px}.actionGrid button{font-size:6px}.lobbyCard{padding:20px}.form,.lobbyActions{grid-template-columns:1fr}}
-/* REFERENCE TABLE FINISH */
 :root{
-  --felt:#07553f;--felt2:#043b2e;--felt3:#01251d;
-  --wood:#2a1207;--wood2:#6f3214;--wood3:#b96827;
-  --woodHi:#d8893d;--gold:#d6b15d;--gold2:#ffe49a;--cream:#f6edd7;
-  --muted:#b9b092;--panel:rgba(2,9,7,.88);--line:rgba(225,188,95,.56);
+  --felt:#0c6a4f;--felt2:#054a38;--felt3:#02271d;
+  --wood:#1c0d05;--wood2:#5a2c11;--wood3:#a05a26;--woodHi:#d68a3f;
+  --gold:#d6b15d;--gold2:#ffe49a;--cream:#f6edd7;--muted:#b9b092;
+  --panel:rgba(3,10,8,.88);--line:rgba(224,188,97,.55);
+  --blue:#153d72;--blue2:#4e82c2;--red:#a52a24;--green:#0b6c52;
 }
-body{background:#070403}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--cream);background:#070403}
+button,input{font:inherit}
+button{color:var(--cream);border:1px solid rgba(231,199,122,.34);background:linear-gradient(180deg,#1b211c,#0b120e);border-radius:8px;min-height:34px;padding:7px 10px;cursor:pointer;box-shadow:inset 0 1px rgba(255,255,255,.09),0 5px 12px #0008;transition:transform .18s ease,filter .18s ease,box-shadow .22s ease,border-color .22s ease,background .22s ease}
+button:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.12);box-shadow:0 7px 18px #0009,inset 0 1px #fff2}
+button:active:not(:disabled){transform:translateY(0) scale(.985)}
+button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
+.primary{background:linear-gradient(180deg,#2e8fdf,#0e4b7d);border-color:#73b8f2;box-shadow:0 0 18px #247edb33}
+.goldBtn{background:linear-gradient(180deg,#9a7831,#4b3510);border-color:#e8c969;box-shadow:0 0 16px #d5ad4a33}
+.danger{background:linear-gradient(180deg,#bd3a32,#741611);border-color:#ee7866}
+.ghost{background:rgba(0,0,0,.25);box-shadow:none}
+
+/* ===== App / wood shell ===== */
 .app{
-  position:relative;width:100%;height:100%;padding:8px;overflow:hidden;
+  position:relative;width:100%;height:100%;padding:14px;overflow:hidden;
   background:
-    radial-gradient(ellipse at 50% 110%,#6b3517 0%,#2a1208 28%,#100704 58%,#050302 100%),
-    repeating-linear-gradient(7deg,rgba(255,170,74,.08) 0 2px,transparent 2px 11px),
-    repeating-linear-gradient(97deg,rgba(120,54,18,.14) 0 3px,transparent 3px 17px);
-}
-.app:after{
-  content:"Edit";position:absolute;left:18px;bottom:15px;z-index:40;
-  min-width:72px;height:43px;padding:0 17px;border-radius:23px;
-  display:grid;place-items:center;background:rgba(19,15,13,.96);
-  color:#fff;font-size:18px;font-weight:600;box-shadow:0 8px 25px #000b;
+    radial-gradient(ellipse at 50% 108%,#7a3d17 0%,#2c1308 30%,#100804 60%,#050302 100%),
+    repeating-linear-gradient(6deg,rgba(255,170,74,.07) 0 2px,transparent 2px 12px),
+    repeating-linear-gradient(96deg,rgba(120,54,18,.12) 0 3px,transparent 3px 18px);
 }
 .table{
   position:relative;width:100%;height:100%;overflow:hidden;
-  border:7px solid transparent;border-radius:22px;padding:10px;
+  border-radius:46px;padding:16px;
   background:
-    radial-gradient(ellipse at 50% 44%,rgba(12,120,88,.98) 0%,rgba(4,84,63,.99) 40%,rgba(2,47,36,.99) 76%,rgba(1,28,22,1) 100%),
-    repeating-linear-gradient(12deg,rgba(255,255,255,.025) 0 2px,transparent 2px 9px);
-  background-clip:padding-box;
-  box-shadow:
-    inset 0 0 0 2px rgba(238,194,95,.42),
-    inset 0 0 80px rgba(0,0,0,.58),
-    0 18px 55px #000d;
+    linear-gradient(160deg,#7c4018,#3a1b09 30%,#20100a 60%,#160b06 100%);
+  box-shadow:0 24px 70px #000e, inset 0 0 0 1px rgba(255,200,120,.18);
 }
 .table:before{
-  content:"";position:absolute;inset:-2px;pointer-events:none;z-index:1;
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:5;border-radius:46px;
   background:
-    radial-gradient(ellipse at 50% 44%,transparent 24%,rgba(0,0,0,.06) 57%,rgba(0,0,0,.48) 100%),
-    repeating-linear-gradient(8deg,rgba(255,255,255,.018) 0 1px,transparent 1px 7px),
-    radial-gradient(circle at 18% 18%,rgba(255,220,130,.06),transparent 18%),
-    radial-gradient(circle at 82% 75%,rgba(0,0,0,.18),transparent 24%);
-  opacity:1;
+    repeating-linear-gradient(11deg,rgba(255,190,110,.10) 0 2px,transparent 2px 10px),
+    repeating-linear-gradient(101deg,rgba(60,26,8,.22) 0 2px,transparent 2px 14px),
+    radial-gradient(ellipse at 50% 0%,rgba(255,205,140,.14),transparent 30%),
+    radial-gradient(ellipse at 50% 100%,rgba(0,0,0,.45),transparent 35%);
+  box-shadow:inset 0 0 0 3px rgba(255,206,130,.28), inset 0 0 40px #000a;
 }
-.table:after{
-  content:"♠";position:absolute;left:53%;top:47%;transform:translate(-50%,-50%);
-  font-size:190px;color:rgba(211,182,91,.055);pointer-events:none;z-index:1;
+.feltWrap{
+  position:absolute;inset:16px;border-radius:999px/120px;overflow:hidden;z-index:2;
+  background:
+    radial-gradient(ellipse at 50% 40%,rgba(20,140,102,.98) 0%,rgba(9,95,71,.99) 42%,rgba(3,58,44,.99) 74%,rgba(1,32,25,1) 100%),
+    repeating-linear-gradient(9deg,rgba(255,255,255,.02) 0 2px,transparent 2px 9px);
+  box-shadow:inset 0 0 0 3px rgba(238,194,95,.4),inset 0 0 110px #000c,inset 0 20px 70px #0009;
 }
-.shell{z-index:3}
-.header{grid-template-columns:300px 1fr 235px;gap:12px}
-.brand{padding:2px 0 0 5px}
-.logo{font-size:clamp(54px,5.6vw,76px);color:#f3d48f;text-shadow:0 5px 12px #000d,0 0 20px rgba(238,193,91,.1)}
-.tag{color:#e0cf9d;letter-spacing:3.2px}
-.topOpps{gap:10px}
+.feltWrap:after{
+  content:"♠";position:absolute;left:52%;top:47%;transform:translate(-50%,-50%);
+  font-size:min(22vw,230px);color:rgba(214,183,91,.05);pointer-events:none;
+}
+.shell{position:relative;z-index:6;height:100%;display:grid;grid-template-rows:88px 1fr 150px;gap:6px;padding:8px 14px}
+
+/* ===== Header ===== */
+.header{display:grid;grid-template-columns:290px 1fr 235px;gap:10px;align-items:start}
+.brand{padding:2px 0 0 6px}
+.logo{font:700 clamp(48px,5.4vw,72px)/.72 Georgia,"Times New Roman",serif;letter-spacing:-5px;color:#f2d692;text-shadow:0 6px 14px #000d,0 0 22px rgba(240,196,96,.12);position:relative;display:inline-block}
+.logo:before{content:"♠";position:absolute;left:47%;top:-24px;font-size:30px;letter-spacing:0;color:#f2d692}
+.tag{font-size:9px;letter-spacing:3.2px;margin:9px 0 0 4px;color:#e0cf9d;text-shadow:0 2px 4px #000}
+
+.topOpps{display:flex;justify-content:center;gap:14px;align-self:start;padding-top:2px}
 .opp{
-  padding:8px 10px;
-  background:linear-gradient(145deg,rgba(5,18,13,.96),rgba(1,7,5,.96));
-  border-color:#d5b15f;border-radius:12px;
-  box-shadow:0 9px 25px #0009,inset 0 1px rgba(255,255,255,.05);
+  padding:8px 11px;min-width:150px;
+  background:linear-gradient(145deg,rgba(6,20,14,.97),rgba(1,7,5,.97));
+  border:1px solid var(--line);border-radius:14px 14px 20px 20px;
+  box-shadow:0 10px 24px #0009,inset 0 1px rgba(255,255,255,.06);
+  transition:.35s ease;position:relative;
 }
-.miniBack{
-  width:38px;height:54px;border:2px solid #f1eadc;border-radius:6px;
-  background:
-    radial-gradient(circle at center,rgba(218,185,98,.16) 0 21%,transparent 22%),
-    linear-gradient(135deg,#0c2d5c,#315f91 48%,#0a254b);
-  box-shadow:2px 5px 10px #000b,inset 0 0 0 1px rgba(226,191,99,.25);
-}
-.miniBack:before{inset:4px;border-color:#e8d7b0aa}
-.miniBack:after{font-size:16px}
-.roomMenu,.panel{
-  background:linear-gradient(145deg,rgba(3,10,8,.94),rgba(1,5,4,.92));
-  border-color:#d5b15f;
-  box-shadow:0 11px 27px #0009,inset 0 1px rgba(255,255,255,.07);
-}
-.roomMenu{width:235px}
-.content{grid-template-columns:260px minmax(420px,1fr) 320px;gap:11px}
-.panelTitle{font-size:17px;color:#efd69a;text-shadow:0 1px 2px #000}
-.logPanel,.chatPanel{border-color:#cba657}
-.center{overflow:visible}
-.stage{overflow:visible}
-.piles{gap:62px;transform:translateY(4px)}
-.stack{width:94px;height:124px}
-.card.back{
-  background:
-    radial-gradient(circle at center,rgba(221,186,99,.2) 0 20%,transparent 21%),
-    linear-gradient(135deg,#0b2d5c,#315f93 49%,#09244a);
-  border-color:#f0eadf;
-  box-shadow:0 7px 12px #000b,inset 0 0 0 1px rgba(224,187,93,.35);
-}
-.card.back:before{border-color:#ead9b0b5}
-.card.back:after{font-size:27px}
-.stack .card:nth-child(1){filter:brightness(.46);transform:translate(11px,11px)}
-.stack .card:nth-child(2){filter:brightness(.61);transform:translate(8px,8px)}
-.stack .card:nth-child(3){filter:brightness(.77);transform:translate(4px,4px)}
-.drawnBox{margin-left:12px;width:120px;background:linear-gradient(145deg,rgba(3,14,10,.9),rgba(1,6,4,.92));border-color:#cba65777}
-.pileLabel{font-size:14px;color:#f0d17f;text-shadow:0 2px 3px #000}
-.pileCount{font-size:10px;color:#d4c69f}
-.ability,.actions,.values{padding:10px!important}
+.opp:nth-child(1){transform:translateY(10px) rotate(-2.3deg)}
+.opp:nth-child(2){transform:translateY(-3px)}
+.opp:nth-child(3){transform:translateY(10px) rotate(2.3deg)}
+.opp.active{border-color:var(--gold2);box-shadow:0 0 24px #f2d07040,0 10px 24px #0009;transform:translateY(-4px) scale(1.03) !important}
+.oppHead{display:flex;align-items:center;justify-content:space-between;gap:7px}
+.identity{display:flex;align-items:center;gap:7px;min-width:0}
+.avatar{position:relative;width:31px;height:31px;flex:0 0 31px;border:1px solid var(--gold);border-radius:50%;background:radial-gradient(circle at 50% 33%,#bda887 0 16%,transparent 17%),radial-gradient(ellipse at 50% 91%,#bda887 0 28%,transparent 29%),radial-gradient(circle,#433b30,#15130f 72%);box-shadow:0 2px 10px #0009}
+.name{font:700 12px Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cardsCount{font-size:9px;color:#cbbd99}
+.statusText{font-size:8px;color:#8d938a}
+.statusText.ai{color:#d9c275}
+.miniHand{display:flex;justify-content:center;gap:3px;margin-top:7px;min-height:44px}
+.miniBack{width:31px;height:43px;border:2px solid #f0e9dc;border-radius:5px;background:radial-gradient(circle at center,rgba(220,187,99,.18) 0 20%,transparent 21%),linear-gradient(135deg,#0f2e5c,#345f95 48%,#0a2750);position:relative;box-shadow:2px 4px 7px #0009;overflow:hidden;transition:.2s ease;cursor:default}
+.miniBack:before{content:"";position:absolute;inset:3px;border:1px solid #e7d5aaab;background:repeating-linear-gradient(45deg,transparent 0 3px,#ead9b01b 4px 5px),repeating-linear-gradient(-45deg,transparent 0 3px,#ead9b012 4px 5px)}
+.miniBack:after{content:"♠";position:absolute;inset:0;display:grid;place-items:center;color:#e0c36d;font-size:13px;text-shadow:0 2px 3px #000}
+.miniBack:nth-child(even){transform:rotate(2deg)}
+.miniBack:nth-child(3n){transform:rotate(-2deg)}
+.miniBack.pickable{cursor:pointer;border-color:#ffe49a;box-shadow:0 0 0 2px #ffdb70,0 0 14px #ffdb70aa;transform:translateY(-3px) scale(1.05) !important;animation:pickPulse 1.1s ease-in-out infinite}
+
+.roomMenu{justify-self:end;width:235px;background:linear-gradient(145deg,rgba(4,10,8,.96),rgba(1,4,3,.95));border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 28px #000b;padding:6px}
+.codeRow{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 8px;border-bottom:1px solid #ffffff12}
+.codeLabel{font-size:8px;letter-spacing:1.4px;color:#e1ce96}
+.code{font-size:19px;font-weight:800;letter-spacing:2px}
+.roomTitle{font-size:8px;color:#9b9683;margin-top:1px}
+.copy{width:34px;min-height:30px;padding:0;font-size:17px}
+.menuGrid{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding-top:3px}
+.menuGrid button{border:0;box-shadow:none;background:transparent;text-align:left;font-size:9px;min-height:29px}
+.menuGrid button.active{background:#4a3512;color:#f4d896}
+.menuGrid button:hover{background:#fff1;transform:none}
+.mi{color:var(--gold);width:17px;display:inline-block}
+
+/* ===== Content grid ===== */
+.content{min-height:0;display:grid;grid-template-columns:250px minmax(400px,1fr) 300px;gap:10px}
+.leftCol,.rightCol{min-height:0;display:flex;flex-direction:column;gap:8px}
+.panel{background:linear-gradient(145deg,rgba(4,14,11,.94),rgba(1,7,5,.94));border:1px solid var(--line);border-radius:13px;box-shadow:0 10px 26px #0007,inset 0 1px #fff08;backdrop-filter:blur(2px)}
+.panelTitle{font:700 16px Georgia,serif;color:#efd69a;text-shadow:0 1px 2px #000}
+.logPanel{flex:1;min-height:0;padding:10px}
+.scroll{overflow:hidden}
+.log{height:calc(100% - 23px);margin-top:5px}
+.logLine{font-size:9.5px;line-height:1.3;padding:5px 3px;border-bottom:1px solid #ffffff0c}
+.logLine:last-child{color:#f0d887;font-weight:700}
+.chatPanel{height:42%;min-height:125px;padding:10px;display:flex;flex-direction:column}
+.chatTabs{display:flex;gap:4px;margin:6px 0}
+.chatTabs button{min-height:27px;padding:4px 8px;font-size:8px;box-shadow:none}
+.chatTabs button.active{background:#765c20;border-color:#e5c36d}
+.chatMessages{flex:1;min-height:0;overflow:hidden}
+.msg{display:flex;gap:6px;margin:4px 0;align-items:flex-start}
+.msg .avatar{width:20px;height:20px;flex-basis:20px}
+.msg .bubble{background:#0d2730;border:1px solid #4d809050;border-radius:9px;padding:5px 7px;font-size:9px;max-width:175px}
+.msg .bubble.private{background:#3a2a10;border-color:#d0aa5d55}
+.msgMeta{font-size:7px;color:#8d9288;margin-top:1px}
+.chatForm{display:flex;gap:5px;margin-top:6px}
+.chatForm input{flex:1;min-width:0;background:#020807;border:1px solid #d9b95d55;color:var(--cream);border-radius:7px;padding:7px 8px;font-size:9px;outline:none}
+.chatForm input:focus{border-color:var(--gold2);box-shadow:0 0 0 2px #e5c87522}
+.send{width:35px;min-height:32px;padding:0}
+.privateRow{display:flex;gap:5px;margin-bottom:3px}
+.privateRow select{flex:1;background:#07100d;color:var(--cream);border:1px solid #d9b95d55;border-radius:7px;font-size:8px;padding:5px}
+
+.rightCol .panel{padding:11px}
 .ability{min-height:112px}
-.actions{min-height:166px}
-.actionGrid{gap:6px}
-.actionGrid button{min-height:39px;font-size:8.5px}
-.primary{background:linear-gradient(180deg,#2e8fdf,#0e4b7d);border-color:#73b8f2;box-shadow:0 0 20px rgba(35,135,225,.22)}
-.goldBtn{background:linear-gradient(180deg,#9a7831,#4b3510);border-color:#e7c66a}
-.danger{background:linear-gradient(180deg,#c63c32,#72140f);border-color:#ee7660}
-.bottom{
-  position:relative;min-height:0;border:0;border-radius:0;background:transparent;
-  box-shadow:none;padding:18px 8% 8px;display:grid;grid-template-columns:150px 1fr 165px;
-  align-items:center;gap:12px;z-index:4;
-}
+.abilityRow{display:flex;gap:10px;align-items:center;margin-top:8px}
+.abilityText{font-size:9.5px;line-height:1.4}
+.values{flex:1;min-height:0}
+.valuesText{font-size:8.5px;line-height:1.5;color:#d5ccb1;margin-top:8px}
+.valuesText strong{color:#f0d384}
+.ruleLine{margin-top:5px}
+.knockPanel{padding:11px !important;text-align:center}
+.knockBtn{width:100%;min-height:40px}
+
+/* ===== Center stage ===== */
+.center{position:relative;min-height:0;display:flex;align-items:center;justify-content:center}
+.stage{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.tagline{position:absolute;right:9%;top:20%;font:italic 15px Georgia,serif;color:#d3b969a0;transform:rotate(-7deg)}
+.statusPill{position:absolute;top:2%;left:50%;transform:translateX(-50%);background:#0a1a13d8;border:1px solid var(--line);border-radius:999px;padding:6px 18px;font-size:10.5px;color:#f0dda6;box-shadow:0 8px 20px #0007;white-space:nowrap;max-width:88%;overflow:hidden;text-overflow:ellipsis}
+.piles{display:flex;align-items:center;gap:60px}
+.pileGroup{text-align:center;position:relative}
+.pileLabel{margin-top:8px;font:700 13px Georgia,serif;color:#e2c779}
+.pileCount{font-size:9px;color:#c9bb95;margin-top:2px}
+.stack{position:relative;width:94px;height:126px;transition:filter .3s ease}
+.stack .card{position:absolute;left:0;top:0}
+.stack .card:nth-child(1){transform:translate(11px,11px);filter:brightness(.46)}
+.stack .card:nth-child(2){transform:translate(8px,8px);filter:brightness(.61)}
+.stack .card:nth-child(3){transform:translate(4px,4px);filter:brightness(.77)}
+.stack .card:nth-child(4){transform:none}
+#deck.canDraw{cursor:pointer;animation:deckGlow 1.4s ease-in-out infinite}
+#deck.canDraw .card{border-color:#ffe49a !important}
+#deck:not(.canDraw){filter:saturate(.7) brightness(.86)}
+.throwRing{position:absolute;right:-64px;top:50%;transform:translateY(-50%);width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--gold2) calc(var(--pct,100)*1%),rgba(255,255,255,.12) 0);box-shadow:0 8px 18px #0008;opacity:0;pointer-events:none;transition:opacity .25s ease}
+.throwRing.show{opacity:1}
+.throwRing:before{content:"";position:absolute;inset:4px;border-radius:50%;background:#0a1912;border:1px solid rgba(255,220,150,.35)}
+.throwRing span{position:relative;z-index:1;font:700 16px Georgia,serif;color:#ffe49a}
+.throwRing small{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-size:7px;letter-spacing:1px;color:#e6cf9c;white-space:nowrap}
+
+/* ===== Center floating action ===== */
+.centerAction{position:absolute;left:50%;bottom:10%;transform:translate(-50%,0);z-index:20;display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none}
+.centerAction.hidden{display:none}
+.centerAction>*{pointer-events:auto}
+.caCardWrap{position:relative;animation:caPop .32s cubic-bezier(.2,.8,.2,1)}
+.caCardWrap .card{width:98px;height:137px;box-shadow:0 16px 34px #000c,0 0 0 1px rgba(255,220,150,.3)}
+.caPrompt{background:#050f0bf0;border:1px solid var(--line);border-radius:11px;padding:7px 16px;font-size:10.5px;color:#f0dda6;text-align:center;max-width:280px;box-shadow:0 8px 20px #0008}
+.caButtons{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:340px}
+.caButtons button{font-size:10px;min-height:38px;padding:8px 14px}
+.caCancelHint{font-size:8px;color:#a79c7e;text-align:center}
+
+/* ===== Bottom rail ===== */
+.bottom{position:relative;min-height:0;padding:16px 9% 6px;display:grid;grid-template-columns:150px 1fr 165px;align-items:center;gap:12px;z-index:7}
 .bottom:before{
-  content:"";position:absolute;z-index:0;left:5.5%;right:5.5%;top:3px;bottom:0;
-  border:2px solid #a9541d;border-radius:82px 82px 30px 30px / 30px 30px 20px 20px;
+  content:"";position:absolute;z-index:0;left:4%;right:4%;top:0;bottom:0;
+  border:2px solid #a9541d;border-radius:90px 90px 26px 26px/34px 34px 18px 18px;
   background:
-    radial-gradient(ellipse at 50% 18%,rgba(185,94,36,.55),transparent 40%),
-    linear-gradient(180deg,#7d3e19 0%,#4a200d 26%,#241006 100%),
+    radial-gradient(ellipse at 50% 15%,rgba(216,138,63,.5),transparent 42%),
+    linear-gradient(180deg,#7d3e19 0%,#4a200d 28%,#221006 100%),
     repeating-linear-gradient(8deg,rgba(255,179,87,.13) 0 2px,transparent 2px 9px),
     repeating-linear-gradient(98deg,rgba(90,35,10,.16) 0 3px,transparent 3px 15px);
   box-shadow:inset 0 3px 0 rgba(255,220,160,.16),inset 0 -10px 22px rgba(0,0,0,.55),0 -10px 35px #0009,0 9px 22px #0009;
 }
 .bottom:after{
-  content:"";position:absolute;z-index:0;left:8%;right:8%;top:17px;bottom:12px;
-  border-radius:68px 68px 22px 22px / 25px 25px 17px 17px;
-  background:radial-gradient(ellipse at 50% 35%,#281108,#150905 78%);
-  border:1px solid rgba(214,157,74,.52);box-shadow:inset 0 0 28px #000b;
+  content:"";position:absolute;z-index:0;left:7%;right:7%;top:15px;bottom:10px;
+  border-radius:74px 74px 20px 20px/26px 26px 15px 15px;
+  background:radial-gradient(ellipse at 50% 30%,#2a1108,#150905 78%);
+  border:1px solid rgba(214,157,74,.5);box-shadow:inset 0 0 30px #000b;
 }
 .bottom>*{position:relative;z-index:2}
-.youTitle{font-size:22px;color:#f3dfb0;text-shadow:0 2px 4px #000}
-.youCount{color:#d8c9a3}
-.hand{gap:12px}
-.slot{width:80px;height:112px}
-.slot:hover{transform:translateY(-9px) rotate(-1deg)}
-.slot.selected{transform:translateY(-13px) scale(1.035)}
-.footerRule{color:#d9ca9f}
-.footerPill{bottom:-4px;background:#160904e8;border-color:#d0a14f}
+.youTitle{font:700 22px Georgia,serif;color:#f3dfb0;text-shadow:0 2px 4px #000}
+.youCount{font-size:10px;color:#d8c9a3;margin-top:2px}
+.hand{display:flex;align-items:flex-end;justify-content:center;gap:12px;min-width:0}
+.slot{position:relative;width:80px;height:112px;transition:transform .22s ease,filter .22s ease;cursor:default}
+.slot:nth-child(1){transform:rotate(-6deg) translateY(6px)}
+.slot:nth-child(2){transform:rotate(-2deg) translateY(0)}
+.slot:nth-child(3){transform:rotate(2deg) translateY(0)}
+.slot:nth-child(4){transform:rotate(6deg) translateY(6px)}
+.slot:nth-child(n+5){transform:rotate(0) translateY(2px)}
+.slot.throwable{cursor:pointer}
+.slot.throwable:hover{transform:translateY(-9px) scale(1.04) !important;filter:drop-shadow(0 6px 14px #000a)}
+.slot.pickable{cursor:pointer;animation:pickPulse 1.1s ease-in-out infinite}
+.slot.pickable .card{border-color:#ffe49a !important;box-shadow:0 0 0 2px #ffdb70,0 0 18px #ffdb70cc,5px 10px 15px #000a}
+.slotNum{position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);font-size:8px;color:#cdbf9a}
+.footerRule{text-align:right;font-size:7.5px;line-height:1.35;color:#cdbf9a}
+.footerPill{position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);border:1px solid #d6ad5c66;border-radius:999px;padding:3px 24px;background:#160b05dd;color:#d6b765;font-size:7px;letter-spacing:1.7px;white-space:nowrap;z-index:8}
 
-@media(max-width:1100px){.header{grid-template-columns:240px 1fr 205px}.content{grid-template-columns:215px minmax(340px,1fr) 275px}.roomMenu{width:205px}.bottom{grid-template-columns:115px 1fr 125px;padding-left:5%;padding-right:5%}.slot{width:67px;height:96px}.card{width:62px;height:88px}.hand{gap:7px}}
-@media(max-width:850px){.app{padding:0}.table{border-width:4px;border-radius:0}.header{grid-template-columns:155px 1fr 170px}.logo{font-size:45px}.content{grid-template-columns:175px minmax(280px,1fr) 230px}.bottom{grid-template-columns:90px 1fr 90px;padding-left:3%;padding-right:3%;height:112px}.bottom:before{left:2%;right:2%}.bottom:after{left:4%;right:4%}.slot{width:55px;height:79px}.card{width:54px;height:76px}.hand{gap:4px}}
-@media(max-width:680px){.header{grid-template-columns:115px 1fr 128px}.logo{font-size:35px}.topOpps{display:none}.content{grid-template-columns:135px minmax(180px,1fr) 145px}.roomMenu{width:128px}.menuGrid{grid-template-columns:1fr}.bottom{grid-template-columns:62px 1fr 62px;padding-left:1%;padding-right:1%;height:94px}.bottom:before{left:0;right:0}.bottom:after{left:2%;right:2%}.slot{width:45px;height:64px}.card{width:45px;height:63px}.youTitle{font-size:12px}.footerRule{font-size:5px}.footerPill{font-size:5px;padding-left:12px;padding-right:12px}.app:after{left:8px;bottom:8px;transform:scale(.78);transform-origin:left bottom}}
+/* ===== Cards ===== */
+.card{width:72px;height:101px;border-radius:8px;position:relative;overflow:hidden;box-shadow:5px 9px 15px #000a;font-family:Georgia,serif;font-weight:700}
+.card.back{border:3px solid #f2e9dc;background:radial-gradient(circle at center,rgba(221,186,99,.2) 0 20%,transparent 21%),linear-gradient(135deg,#0f2e5c,#345f95 50%,#0c2852);outline:1px solid #0a1d3c;color:#e2c36d;display:grid;place-items:center}
+.card.back:before{content:"";position:absolute;inset:5px;border:1px solid #ead8b5dd;border-radius:4px;background:repeating-linear-gradient(45deg,transparent 0 4px,#ead8b01b 5px 6px),repeating-linear-gradient(-45deg,transparent 0 4px,#ead8b012 5px 6px)}
+.card.back:after{content:"♠";position:relative;z-index:2;border:1px solid #e2c36d;border-radius:50%;padding:5px 10px;background:#10274ddf;box-shadow:0 0 0 3px #153661}
+.card.face{background:linear-gradient(145deg,#fffdf9,#e9e4d9);border:2px solid #f5efe2;color:#111;padding:4px;display:flex;flex-direction:column;justify-content:space-between}
+.card.face.red{color:#bd2430}
+.corner{line-height:13px;font-size:14px;z-index:2}
+.suit{font-size:35px;align-self:center;margin:auto;z-index:2}
+.rot{transform:rotate(180deg);align-self:flex-end}
+.card.face:before{content:"";position:absolute;inset:3px;border:1px solid #0002;border-radius:5px}
+.card.small{width:53px;height:75px}
+.card.small .corner{font-size:10px;line-height:9px}
+.card.small .suit{font-size:23px}
+.card.tiny{width:40px;height:56px}
+.card.tiny .corner{font-size:8px;line-height:7px}
+.card.tiny .suit{font-size:18px}
+
+.fly{position:fixed;z-index:1000;pointer-events:none;animation:fly .72s cubic-bezier(.18,.82,.25,1) forwards;transform-origin:center}
+.fly .card{width:72px;height:101px}
+.pop{animation:pilePop .45s ease}
+.cardEnter{animation:cardEnter .42s cubic-bezier(.2,.8,.2,1)}
+
+/* ===== Modals ===== */
+.modalHost{position:fixed;inset:0;z-index:2000;display:none;place-items:center;background:#0008;backdrop-filter:blur(4px)}
+.modalHost.open{display:grid}
+.modal{width:min(470px,88vw);background:linear-gradient(145deg,#0b1511f7,#020705f7);border:1px solid #e4bd65;border-radius:13px;box-shadow:0 25px 70px #000d,0 0 35px #d3ad5220;padding:18px;animation:modalIn .24s ease}
+.modalTitle{font:700 20px Georgia,serif;color:#efd28a;text-align:center}
+.modalSub{font-size:10px;color:#c9c0a9;text-align:center;margin:6px 0 12px}
+.choices{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+.choices button{min-width:52px}
+.timerBar{height:3px;background:#e3be65;margin-top:15px;transform-origin:left;animation:timer 4s linear forwards}
+.flipWrap{perspective:1000px;width:86px;height:120px;margin:auto}
+.flipInner{width:100%;height:100%;position:relative;transform-style:preserve-3d;animation:flipReveal .8s cubic-bezier(.2,.8,.2,1) forwards}
+.flipFace{position:absolute;inset:0;backface-visibility:hidden}
+.flipFront{transform:rotateY(180deg)}
+.revealGrid{display:flex;justify-content:center;gap:28px}
+.revealMeta{text-align:center;font-size:8px;color:#c8be9f;margin-top:5px}
+
+.lobby{position:fixed;inset:0;z-index:3000;display:grid;place-items:center;background:radial-gradient(circle at 50% 25%,#0b7457,#022e24 58%,#070403);padding:20px}
+.lobbyCard{width:min(620px,94vw);background:linear-gradient(145deg,#07140ff5,#020706f7);border:1px solid #d9b65d77;border-radius:18px;padding:28px;box-shadow:0 30px 90px #000d,0 0 45px #d1ad4b18;text-align:center}
+.lobbyLogo{font:700 clamp(52px,8vw,82px)/.8 Georgia,serif;color:#efd18a;letter-spacing:-6px;text-shadow:0 7px 18px #000}
+.lobbyTag{font-size:10px;letter-spacing:4px;color:#d5c391;margin:9px 0 24px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left}
+.field{background:#020807;border:1px solid #d9b95d55;color:var(--cream);border-radius:9px;padding:10px 11px;outline:none;width:100%;font-size:12px}
+.field:focus{border-color:var(--gold2);box-shadow:0 0 0 2px #e5c87522}
+.lobbyActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.lobbyHint{font-size:9px;color:#aaa38d;margin-top:15px}
+.toast{position:fixed;left:50%;bottom:22px;z-index:5000;transform:translate(-50%,15px);background:#030806f5;border:1px solid #e0bd64aa;border-radius:9px;padding:8px 13px;font-size:9px;opacity:0;pointer-events:none;transition:.25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@keyframes fly{0%{transform:translate(0,0) rotate(0) scale(.86);opacity:0}12%{opacity:1}45%{transform:translate(var(--dx),var(--dy)) rotate(-9deg) scale(1.06)}100%{transform:translate(var(--tx),var(--ty)) rotate(0) scale(1);opacity:.96}}
+@keyframes pilePop{0%,100%{transform:scale(1)}45%{transform:scale(1.12) rotate(-2deg)}}
+@keyframes cardEnter{from{opacity:0;transform:translateY(12px) scale(.92) rotate(-3deg)}to{opacity:1;transform:none}}
+@keyframes caPop{from{opacity:0;transform:translateY(16px) scale(.9)}to{opacity:1;transform:none}}
+@keyframes modalIn{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes timer{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@keyframes flipReveal{0%{transform:rotateY(0)}100%{transform:rotateY(180deg)}}
+@keyframes deckGlow{0%,100%{filter:drop-shadow(0 0 4px #ffdb70aa)}50%{filter:drop-shadow(0 0 18px #ffdb70ee)}}
+@keyframes pickPulse{0%,100%{filter:drop-shadow(0 0 3px #ffdb70aa)}50%{filter:drop-shadow(0 0 12px #ffdb70)}}
+
+@media(max-width:1150px){.header{grid-template-columns:240px 1fr 205px}.content{grid-template-columns:210px minmax(340px,1fr) 270px}.roomMenu{width:205px}.bottom{grid-template-columns:115px 1fr 125px}.slot{width:67px;height:96px}.card{width:62px;height:88px}.hand{gap:7px}}
+@media(max-width:880px){.app{padding:5px}.table{border-radius:24px}.shell{grid-template-rows:66px 1fr 118px;padding:6px 8px}.header{grid-template-columns:160px 1fr 170px}.logo{font-size:44px}.tag{font-size:7px;letter-spacing:2px}.topOpps{gap:6px}.opp{padding:6px 8px;min-width:110px}.avatar{width:24px;height:24px;flex-basis:24px}.name{font-size:9px}.miniBack{width:23px;height:33px}.content{grid-template-columns:170px minmax(260px,1fr) 220px;gap:6px}.bottom{grid-template-columns:90px 1fr 90px;padding:12px 5% 6px}.slot{width:54px;height:76px}.card{width:54px;height:76px}.hand{gap:4px}.youTitle{font-size:16px}.footerRule{font-size:6px}.panelTitle{font-size:13px}.logLine,.valuesText,.abilityText{font-size:7.5px}.roomMenu{width:170px}.menuGrid button{font-size:8px}.code{font-size:15px}.throwRing{right:-46px;width:44px;height:44px}}
+@media(max-width:680px){.shell{grid-template-rows:54px 1fr 96px}.header{grid-template-columns:120px 1fr 128px}.logo{font-size:34px;letter-spacing:-3px}.tag{display:none}.topOpps{display:none}.roomMenu{width:128px}.menuGrid{grid-template-columns:1fr}.menuGrid button:nth-child(n+3){display:none}.codeLabel{display:none}.content{grid-template-columns:130px minmax(170px,1fr) 145px;gap:4px}.chatPanel{height:44%}.panel{border-radius:8px}.piles{gap:16px}.tagline{display:none}.bottom{grid-template-columns:60px 1fr 60px;padding:10px 2% 4px}.slot{width:44px;height:62px}.card{width:44px;height:62px}.hand{gap:2px}.youTitle{font-size:12px}.youCount{font-size:7px}.footerRule{font-size:5px}.footerPill{font-size:5px}.caCardWrap .card{width:76px;height:106px}.caButtons button{font-size:8.5px;min-height:32px;padding:6px 9px}.throwRing{display:none}}
 </style>
 </head>
 <body>
@@ -174,13 +294,14 @@ body{background:#070403}
 </div>
 <div id="game" class="app" style="display:none">
   <div class="table">
+    <div class="feltWrap"></div>
     <div class="shell">
       <header class="header">
         <div class="brand"><div class="logo">Switchie</div><div class="tag">HIDDEN CARDS. BIG MOVES.</div></div>
         <div id="topOpps" class="topOpps"></div>
         <div class="roomMenu">
           <div class="codeRow"><div><div class="codeLabel">ROOM CODE</div><div id="roomCode" class="code">------</div><div id="roomTitle" class="roomTitle">Private Table</div></div><button id="copy" class="copy">▣</button></div>
-          <div class="menuGrid"><button id="settings"><span class="mi">⚙</span>Room Settings</button><button id="addAi"><span class="mi">♟</span>Add AI Player</button><button id="invite"><span class="mi">⌁</span>Invite Friends</button><button id="startGame"><span class="mi">▶</span>Start Game</button><button id="leaveRoom"><span class="mi">⌂</span>Leave Room</button><button id="newGame"><span class="mi">↩</span>Main Menu</button></div>
+          <div class="menuGrid"><button id="newGame"><span class="mi">♦</span>New Game</button><button id="addAi"><span class="mi">♟</span>Add AI Player</button><button id="startGame" class="active"><span class="mi">▶</span>Play vs AI</button><button id="settings"><span class="mi">⚙</span>Settings</button><button id="invite"><span class="mi">⌁</span>Invite Friends</button><button id="leaveRoom"><span class="mi">?</span>How to Play</button></div>
         </div>
       </header>
       <div class="content">
@@ -195,17 +316,20 @@ body{background:#070403}
           </section>
         </aside>
         <main class="center"><div class="stage">
+          <div class="statusPill" id="statusPill">Waiting for the game to start.</div>
           <div class="piles">
-            <div class="pileGroup"><div id="deck" class="stack"></div><div class="pileLabel">Draw Pile</div><div id="deckCount" class="pileCount">52 cards left</div></div>
+            <div class="pileGroup"><div id="deck" class="stack"></div><div class="pileLabel">Draw Pile</div><div id="deckCount" class="pileCount">52 cards left</div>
+              <div id="throwRing" class="throwRing"><span id="throwRingNum">6</span><small>THROW WINDOW</small></div>
+            </div>
             <div class="pileGroup"><div id="pile" class="stack"></div><div class="pileLabel">Discard Pile</div></div>
-            <div id="drawnBox" class="drawnBox empty">Nothing drawn</div>
           </div>
           <div class="tagline">Know. Switch. Win.</div>
+          <div id="centerAction" class="centerAction hidden"></div>
         </div></main>
         <aside class="rightCol">
           <section class="panel ability"><div class="panelTitle">Current Card Ability</div><div class="abilityRow"><div id="abilityCard"></div><div id="abilityText" class="abilityText">Draw a special card to reveal its ability.</div></div></section>
-          <section class="panel actions"><div class="panelTitle">Turn Actions</div><div class="actionGrid"><button id="drawBtn" class="primary">▣ &nbsp;Draw Card</button><button id="playBtn">▢ &nbsp;Discard Drawn</button><button id="replaceBtn">⇄ &nbsp;Replace Selected</button><button id="abilityBtn" class="goldBtn">★ &nbsp;Use Ability</button><button id="throwBtn">→ &nbsp;Throw Selected</button><button id="knockBtn" class="danger">⚑ &nbsp;Knock</button></div><div id="hint" class="hint">Waiting for the game to start.</div></section>
           <section class="panel values"><div class="panelTitle">Card Values</div><div class="valuesText"><div>A = 1 · 2–10 = face value · J = 11 · Q = 12 · K = 13</div><div class="ruleLine"><strong>K♦</strong> = −1 while face down.</div><div class="ruleLine"><strong>Special Abilities</strong> (only when drawn):</div><div class="ruleLine">8 / 9 / 10 → Look at one of your cards.</div><div class="ruleLine">J → Blindly switch one of your cards with another player.</div><div class="ruleLine">Q → Look at one of yours and one opponent's card.</div><div class="ruleLine">K / K♦ → Look at one of yours and one opponent's card, then optionally switch those exact cards.</div></div></section>
+          <section class="panel knockPanel"><button id="knockBtn" class="danger knockBtn">⚑ Knock</button></section>
         </aside>
       </div>
       <footer class="bottom">
@@ -221,48 +345,198 @@ body{background:#070403}
 <script>
 const socket=io({autoConnect:true});
 const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-let state=null,selected=null,playerId=localStorage.getItem('switchiePlayerId')||'',roomCode=localStorage.getItem('switchieRoomCode')||'',chatMode='room',privateMessages=[],lastDrawnKey='',drawAnimating=false,toastTimer;
+let state=null,playerId=localStorage.getItem('switchiePlayerId')||'',roomCode=localStorage.getItem('switchieRoomCode')||'',chatMode='room',privateMessages=[],lastDrawnKey='',drawAnimating=false,toastTimer;
+let mode='idle',uiOwnIndex=null,uiTargetPlayer=null,throwCardIndex=null,ringTimer=null;
 const suitMap={S:'♠',H:'♥',D:'♦',C:'♣'};
 function suit(s){return suitMap[s]||s}function isRed(s){return s==='H'||s==='D'}
 function card(c,back=false,cls=''){if(back||!c)return `<div class="card back ${cls}"></div>`;return `<div class="card face ${isRed(c.s)?'red':''} ${cls}"><div class="corner">${esc(c.r)}<br>${suit(c.s)}</div><div class="suit">${suit(c.s)}</div><div class="corner rot">${esc(c.r)}<br>${suit(c.s)}</div></div>`}
 function toast(msg){clearTimeout(toastTimer);$('toast').textContent=msg;$('toast').classList.add('show');toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2600)}
 function showModal(html){$('modalHost').innerHTML=html;$('modalHost').classList.add('open')}
 function closeModal(){$('modalHost').classList.remove('open');$('modalHost').innerHTML=''}
-function players(){return state?.players||[]}function mine(){return players().find(p=>p.id===state?.playerId)}function myTurn(){return !!state&&state.turn===players().findIndex(p=>p.id===state.playerId)&&!state.ended}
+function players(){return state?.players||[]}
+function mine(){return players().find(p=>p.id===state?.playerId)}
+function myTurn(){return !!state&&state.started&&state.turn===players().findIndex(p=>p.id===state.playerId)&&!state.ended}
 function turnPlayer(){return players()[state?.turn]}
 function activeName(){const p=turnPlayer();return p?p.name:'—'}
-function renderOpponents(){const ps=players().filter(p=>p.id!==state.playerId);$('topOpps').innerHTML=ps.slice(0,3).map(p=>`<div class="opp ${players()[state.turn]?.id===p.id?'active':''}"><div class="oppHead"><div class="identity"><div class="avatar"></div><div><div class="name">${esc(p.name)}${p.ai?' (AI)':''}</div><div class="cardsCount">${p.handCount} cards</div></div></div><div class="statusText ${p.ai?'ai':''}">${p.ai?'AI READY':p.connected?'CONNECTED':'DISCONNECTED'}</div></div><div class="miniHand">${Array.from({length:Math.min(p.handCount,6)},()=>'<div class="miniBack"></div>').join('')}</div></div>`).join('')}
-function renderDeck(){const count=state?.started?Math.max(0,state.deckCount||0):52;$('deck').innerHTML=`${card(null,true)}${count>20?card(null,true):''}${count>10?card(null,true):''}`;$('deckCount').textContent=state?.started?`${count} cards left`:'52 cards ready';$('pile').innerHTML=state?.pileTop?`${card(state.pileTop)}`:card(null,true)}
-function renderHand(){const me=mine();const n=me?.handCount||0;$('youCount').textContent=`${n} cards`;$('hand').innerHTML=Array.from({length:n},(_,i)=>`<div class="slot ${selected===i?'selected':''}" data-i="${i}">${card(null,true)}<div class="slotNum">${i+1}</div></div>`).join('');$('hand').querySelectorAll('.slot').forEach(el=>el.onclick=()=>{if(!myTurn())return;selected=Number(el.dataset.i);renderHand();updateButtons()})}
-function abilityCopy(){
-  const c=state?.drawn;
-  if(!c) return 'Draw a special card to reveal its ability.';
-  const copy={
-    '8':'8 · 9 · 10 — Look at one of your hidden cards. Choose a position and it is revealed for 4 seconds.',
-    '9':'8 · 9 · 10 — Look at one of your hidden cards. Choose a position and it is revealed for 4 seconds.',
-    '10':'8 · 9 · 10 — Look at one of your hidden cards. Choose a position and it is revealed for 4 seconds.',
-    'J':'J — Blindly switch one of your cards with another player.',
-    'Q':"Q — Look at one of your cards and one opponent's card. Both flip open for 4 seconds.",
-    'K':"K / K♦ — Look at one of your cards and one opponent's card, then optionally switch those exact cards."
-  };
-  return copy[c.r] || 'Play the drawn card directly or replace a hidden position.';
+const SPECIAL=new Set(['8','9','10','J','Q','K']);
+
+function resetUiMode(){mode='idle';uiOwnIndex=null;uiTargetPlayer=null;throwCardIndex=null}
+
+function renderOpponents(){
+  const ps=players().filter(p=>p.id!==state.playerId);
+  $('topOpps').innerHTML=ps.slice(0,3).map(p=>{
+    const n=Math.min(p.handCount,8);
+    const backs=Array.from({length:n},(_,i)=>{
+      const pickable=(mode==='pickOppCard' && uiTargetPlayer===p.id);
+      return `<div class="miniBack ${pickable?'pickable':''}" data-pid="${esc(p.id)}" data-idx="${i}"></div>`;
+    }).join('');
+    return `<div class="opp ${players()[state.turn]?.id===p.id?'active':''}" data-pid="${esc(p.id)}">
+      <div class="oppHead"><div class="identity"><div class="avatar"></div><div><div class="name">${esc(p.name)}${p.ai?' (AI)':''}</div><div class="cardsCount">${p.handCount} cards</div></div></div><div class="statusText ${p.ai?'ai':''}">${p.ai?'AI READY':p.connected?'CONNECTED':'DISCONNECTED'}</div></div>
+      <div class="miniHand">${backs}</div>
+    </div>`;
+  }).join('');
+  $('topOpps').querySelectorAll('.opp').forEach(el=>{
+    el.onclick=(e)=>{ if(mode==='pickOpponent'){ e.stopPropagation(); chooseOpponent(el.dataset.pid); } };
+  });
+  $('topOpps').querySelectorAll('.miniBack').forEach(el=>{
+    el.onclick=(e)=>{ if(mode==='pickOppCard' && uiTargetPlayer===el.dataset.pid){ e.stopPropagation(); chooseOppCard(Number(el.dataset.idx)); } };
+  });
 }
-function updateButtons(){const turn=myTurn(),drawn=!!state?.drawn,special=drawn&&['8','9','10','J','Q','K'].includes(state.drawn.r);$('drawBtn').disabled=!turn||drawn||state.ended||state.knocked;$('playBtn').disabled=!turn||!drawn||state.ended;$('replaceBtn').disabled=!turn||!drawn||selected===null||state.ended;$('abilityBtn').disabled=!turn||!special||state.ended;$('throwBtn').disabled=!turn||selected===null||state.ended;$('knockBtn').disabled=!turn||drawn||state.knocked||state.ended;$('hint').textContent=turn?(drawn?'Choose an action for your drawn card.':'Draw a card or throw a matching hidden card.'):`${activeName()} is taking the turn.`}
-function renderAbility(){const c=state?.drawn;if(c){$('abilityCard').innerHTML=card(c,false);$('abilityText').textContent=abilityCopy()}else{$('abilityCard').innerHTML=card(null,true,'small');$('abilityText').textContent='Draw a special card to reveal its ability.'}}
+function renderDeck(){
+  const count=state?.started?Math.max(0,state.deckCount||0):52;
+  $('deck').innerHTML=`${card(null,true)}${count>20?card(null,true):''}${count>10?card(null,true):''}`;
+  $('deckCount').textContent=state?.started?`${count} cards left`:'52 cards ready';
+  $('pile').innerHTML=state?.pileTop?`${card(state.pileTop)}`:card(null,true);
+  const canDraw=myTurn()&&!state?.drawn&&mode==='idle'&&!state?.ended;
+  $('deck').classList.toggle('canDraw',!!canDraw);
+}
+function renderThrowRing(){
+  const ring=$('throwRing');
+  if(ringTimer){clearInterval(ringTimer);ringTimer=null}
+  if(!state?.throwOpen||!state?.throwUntil){ring.classList.remove('show');return}
+  ring.classList.add('show');
+  const tick=()=>{
+    const remain=Math.max(0,state.throwUntil-Date.now());
+    const secs=Math.ceil(remain/1000);
+    ring.style.setProperty('--pct',Math.max(0,(remain/6000)*100));
+    $('throwRingNum').textContent=secs;
+    if(remain<=0){ring.classList.remove('show');clearInterval(ringTimer);ringTimer=null}
+  };
+  tick();ringTimer=setInterval(tick,120);
+}
+function canInitiateThrow(){ return (myTurn()&&!state?.drawn) || !!state?.throwOpen; }
+function renderHand(){
+  const me=mine();const n=me?.handCount||0;
+  $('youCount').textContent=`${n} cards`;
+  const throwable = canInitiateThrow() && mode==='idle';
+  const pickingReplace = mode==='pickReplace';
+  const pickingOwn = mode==='pickOwnForAbility';
+  $('hand').innerHTML=Array.from({length:n},(_,i)=>{
+    const cls=[ (pickingReplace||pickingOwn)?'pickable':(throwable?'throwable':'') ].filter(Boolean).join(' ');
+    return `<div class="slot ${cls}" data-i="${i}">${card(null,true)}<div class="slotNum">${i+1}</div></div>`;
+  }).join('');
+  $('hand').querySelectorAll('.slot').forEach(el=>el.onclick=(e)=>{
+    e.stopPropagation();
+    const i=Number(el.dataset.i);
+    handSlotClick(i);
+  });
+}
+function handSlotClick(i){
+  if(mode==='pickReplace'){ socket.emit('replace',{index:i}); resetUiMode(); render(); return; }
+  if(mode==='pickOwnForAbility'){
+    const c=state?.drawn; if(!c) return;
+    if(['8','9','10'].includes(c.r)){ socket.emit('abilityLookOwn',{index:i}); resetUiMode(); render(); return; }
+    uiOwnIndex=i; mode='pickOpponent'; render(); return;
+  }
+  if(mode==='idle' && canInitiateThrow()){ throwCardIndex=i; mode='pickThrow'; render(); return; }
+  if(mode==='idle'){ toast("You can't throw right now — wait for your turn or the throw window."); }
+}
+function chooseOpponent(pid){ uiTargetPlayer=pid; mode='pickOppCard'; render(); }
+function chooseOppCard(idx){
+  const c=state?.drawn; if(!c||uiOwnIndex===null||!uiTargetPlayer) return;
+  if(c.r==='J') socket.emit('abilityJack',{ownIndex:uiOwnIndex,targetId:uiTargetPlayer,targetIndex:idx});
+  else socket.emit('abilityViewPair',{ownIndex:uiOwnIndex,targetId:uiTargetPlayer,targetIndex:idx});
+  resetUiMode(); render();
+}
+function abilityCopy(r){
+  const copy={
+    '8':'Look at one of your hidden cards. Choose a position and it is revealed for 5 seconds.',
+    '9':'Look at one of your hidden cards. Choose a position and it is revealed for 5 seconds.',
+    '10':'Look at one of your hidden cards. Choose a position and it is revealed for 5 seconds.',
+    'J':'Blindly switch one of your cards with another player — neither of you sees it.',
+    'Q':"Look at one of your cards and one opponent's card. Both flip open for 4 seconds.",
+    'K':"Look at one of your cards and one opponent's card, then optionally switch those exact cards."
+  };
+  return copy[r]||'Play the drawn card directly or replace a hidden position.';
+}
+function renderAbility(){
+  const c=state?.drawn;
+  if(c){$('abilityCard').innerHTML=card(c,false,'small');$('abilityText').textContent=abilityCopy(c.r)}
+  else{$('abilityCard').innerHTML=card(null,true,'small');$('abilityText').textContent='Draw a special card to reveal its ability.'}
+}
 function renderLog(){$('log').innerHTML=(state?.logs||[]).map(x=>`<div class="logLine">${esc(x)}</div>`).join('')}
 function formatTime(iso){try{return new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}catch{return ''}}
-function renderChat(){const roomMsgs=(state?.chat||[]).filter(m=>m.kind==='room');let html='';if(chatMode==='room'){html=roomMsgs.slice().reverse().map(m=>`<div class="msg"><div class="avatar" style="width:20px;height:20px;flex-basis:20px"></div><div><div class="msgMeta">${esc(m.from)} · ${formatTime(m.time)}</div><div class="bubble">${esc(m.text)}</div></div></div>`).join('')}else{html=privateMessages.slice(-30).map(m=>`<div class="msg"><div class="avatar" style="width:20px;height:20px;flex-basis:20px"></div><div><div class="msgMeta">${esc(m.from)} · ${formatTime(m.time)}</div><div class="bubble private">${esc(m.text)}</div></div></div>`).join('')}$('chatMessages').innerHTML=html||`<div class="msgMeta" style="padding:12px 2px">${chatMode==='room'?'No messages yet.':'Private messages will appear here.'}</div>`;$('privateRow').style.display=chatMode==='private'?'flex':'none';$('roomTab').classList.toggle('active',chatMode==='room');$('privateTab').classList.toggle('active',chatMode==='private');const opts=players().filter(p=>p.id!==state?.playerId&&!p.ai);$('privateTo').innerHTML=opts.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')||'<option>No friends online</option>'}
-function render(){if(!state)return;$('lobby').style.display='none';$('game').style.display='block';$('roomCode').textContent=state.code;
-  const hint=$('hint'); if(hint){ if(!state.started){ hint.textContent=state.playerId===state.hostId?'Add AI Player or invite a friend, then press Start Game.':'Waiting for the host to start the game.'; } else { hint.textContent=myTurn()?'Draw a card or throw a matching hidden card.':'Waiting for the current player.'; } }
-$('roomTitle').textContent=state.title&&state.title!==state.code?state.title:'Private Table';renderOpponents();renderDeck();renderHand();renderAbility();renderLog();renderChat();updateButtons();if(state.ended)showEnd();}
+function renderChat(){const roomMsgs=(state?.chat||[]).filter(m=>m.kind==='room');let html='';if(chatMode==='room'){html=roomMsgs.slice().reverse().map(m=>`<div class="msg"><div class="avatar"></div><div><div class="msgMeta">${esc(m.from)} · ${formatTime(m.time)}</div><div class="bubble">${esc(m.text)}</div></div></div>`).join('')}else{html=privateMessages.slice(-30).map(m=>`<div class="msg"><div class="avatar"></div><div><div class="msgMeta">${esc(m.from)} · ${formatTime(m.time)}</div><div class="bubble private">${esc(m.text)}</div></div></div>`).join('')}$('chatMessages').innerHTML=html||`<div class="msgMeta" style="padding:12px 2px">${chatMode==='room'?'No messages yet.':'Private messages will appear here.'}</div>`;$('privateRow').style.display=chatMode==='private'?'flex':'none';$('roomTab').classList.toggle('active',chatMode==='room');$('privateTab').classList.toggle('active',chatMode==='private');const opts=players().filter(p=>p.id!==state?.playerId&&!p.ai);$('privateTo').innerHTML=opts.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')||'<option>No friends online</option>'}
+
+function statusText(){
+  if(!state?.started) return state?.playerId===state?.hostId?'Add AI Player or invite a friend, then press Play vs AI.':'Waiting for the host to start the game.';
+  if(state.ended) return 'The hand is over.';
+  if(mode==='pickThrow') return 'Confirm the card you want to throw.';
+  if(mode==='drawnMenu') return 'Use its ability, replace a face-down card, or discard it.';
+  if(mode==='pickReplace') return 'Click one of your face-down cards to replace.';
+  if(mode==='pickOwnForAbility') return 'Click one of your face-down cards.';
+  if(mode==='pickOpponent') return 'Click an opponent to target.';
+  if(mode==='pickOppCard') return "Click one of their face-down cards.";
+  if(state.throwOpen) return `${activeName()} moved — anyone with a match can throw now!`;
+  return myTurn()?'Click the draw pile, or click a face-down card of yours to throw a match.':`${activeName()} is taking the turn.`;
+}
+function renderCenterAction(){
+  const el=$('centerAction');
+  const drawn=state?.drawn;
+  if(mode==='pickThrow' && throwCardIndex!==null){
+    el.classList.remove('hidden');
+    el.innerHTML=`<div class="caCardWrap">${card(null,true)}</div><div class="caPrompt">Throw this face-down card if you think it matches the discard pile?</div><div class="caButtons"><button id="caThrowGo" class="goldBtn">→ Throw this card</button><button id="caCancel" class="ghost">Cancel</button></div><div class="caCancelHint">Or click anywhere on the green felt to cancel.</div>`;
+    $('caThrowGo').onclick=()=>{ socket.emit('throw',{index:throwCardIndex}); animateThrowFlourish(); resetUiMode(); render(); };
+    $('caCancel').onclick=()=>{ resetUiMode(); render(); };
+    return;
+  }
+  if(drawn && ['drawnMenu','pickReplace','pickOwnForAbility','pickOpponent','pickOppCard'].includes(mode)){
+    el.classList.remove('hidden');
+    const special=SPECIAL.has(drawn.r);
+    let prompt='Choose what to do with this card.';
+    if(mode==='pickReplace') prompt='Click one of your face-down cards below to swap it in.';
+    if(mode==='pickOwnForAbility') prompt=drawn.r==='J'?'Click one of your face-down cards to offer for the blind switch.':'Click one of your face-down cards to look at.';
+    if(mode==='pickOpponent') prompt='Click an opponent above to target.';
+    if(mode==='pickOppCard') prompt="Click one of their face-down cards above.";
+    const buttons = mode==='drawnMenu' ? `<div class="caButtons">${special?'<button id="caAbility" class="goldBtn">★ Use Ability</button>':''}<button id="caReplace">⇄ Replace Face-Down Card</button><button id="caDiscard" class="primary">▢ Discard</button></div>` : '';
+    el.innerHTML=`<div class="caCardWrap">${card(drawn,false)}</div><div class="caPrompt">${prompt}</div>${buttons}<div class="caCancelHint">Click anywhere on the green felt to go back.</div>`;
+    if(mode==='drawnMenu'){
+      if($('caAbility')) $('caAbility').onclick=()=>{ mode='pickOwnForAbility'; render(); };
+      $('caReplace').onclick=()=>{ mode='pickReplace'; render(); };
+      $('caDiscard').onclick=()=>{ socket.emit('discardDrawn'); resetUiMode(); render(); };
+    }
+    return;
+  }
+  el.classList.add('hidden'); el.innerHTML='';
+}
+function render(){
+  if(!state)return;
+  $('lobby').style.display='none';$('game').style.display='block';$('roomCode').textContent=state.code;
+  $('statusPill').textContent=statusText();
+  $('roomTitle').textContent=state.title&&state.title!==state.code?state.title:'Private Table';
+  renderOpponents();renderDeck();renderHand();renderAbility();renderLog();renderChat();renderCenterAction();renderThrowRing();
+  const canKnock=myTurn()&&!state.drawn&&!state.knocked&&!state.ended&&mode==='idle';
+  $('knockBtn').disabled=!canKnock;
+  if(state.ended)showEnd();
+}
 function showEnd(){if($('modalHost').classList.contains('open'))return;const scores=state.scores?state.scores.map(s=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #fff1"><span>${esc(s.name)}</span><strong>${s.score}</strong></div>`).join(''):'';showModal(`<div class="modal"><div class="modalTitle">${esc(state.winner||'Game Over')} wins</div><div class="modalSub">${state.scores?'Final scores':'The game ended because a player emptied their hand.'}</div>${scores}<div class="choices" style="margin-top:14px"><button id="closeEnd" class="primary">Back to Room</button></div></div>`);$('closeEnd').onclick=closeModal}
-function animateDraw(){if(drawAnimating||!state?.drawn)return;const src=document.querySelector('#deck .card:last-child'),target=$('drawnBox');if(!src||!target)return;drawAnimating=true;const a=src.getBoundingClientRect(),b=target.getBoundingClientRect(),el=document.createElement('div');el.className='fly';el.innerHTML=card(null,true);el.style.left=a.left+'px';el.style.top=a.top+'px';el.style.setProperty('--tx',(b.left-a.left)+'px');el.style.setProperty('--ty',(b.top-a.top)+'px');el.style.setProperty('--dx',((b.left-a.left)*.45)+'px');el.style.setProperty('--dy',((b.top-a.top)-70)+'px');document.body.appendChild(el);setTimeout(()=>{el.remove();drawAnimating=false;render()},760)}
-function animateThrow(){if(selected===null)return;const src=document.querySelectorAll('#hand .slot')[selected],dst=$('#pile');if(!src||!dst)return;const a=src.getBoundingClientRect(),b=dst.getBoundingClientRect(),el=document.createElement('div');el.className='fly';el.innerHTML=card(null,true);el.style.left=a.left+'px';el.style.top=a.top+'px';el.style.setProperty('--tx',(b.left-a.left)+'px');el.style.setProperty('--ty',(b.top-a.top)+'px');el.style.setProperty('--dx',((b.left-a.left)*.5)+'px');el.style.setProperty('--dy',((b.top-a.top)-45)+'px');document.body.appendChild(el);setTimeout(()=>el.remove(),760)}
-function chooseOwn(title,cb){const me=mine();if(!me)return;showModal(`<div class="modal"><div class="modalTitle">${esc(title)}</div><div class="modalSub">Choose a card position. The selected card will flip open.</div><div class="choices">${Array.from({length:me.handCount},(_,i)=>`<button data-i="${i}">Position ${i+1}</button>`).join('')}</div></div>`);$('modalHost').querySelectorAll('button').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.i);closeModal();cb(i)})}
-function chooseOpponent(title,cb){const ps=players().filter(p=>p.id!==state.playerId&&p.handCount>0);showModal(`<div class="modal"><div class="modalTitle">${esc(title)}</div><div class="modalSub">Choose a player.</div><div class="choices">${ps.map(p=>`<button data-id="${esc(p.id)}">${esc(p.name)}${p.ai?' (AI)':''}</button>`).join('')}</div></div>`);$('modalHost').querySelectorAll('button').forEach(b=>b.onclick=()=>{const id=b.dataset.id;closeModal();cb(id)})}
-function chooseOppCard(title,pid,cb){const p=players().find(x=>x.id===pid);if(!p)return;showModal(`<div class="modal"><div class="modalTitle">${esc(title)}</div><div class="modalSub">Choose their card position.</div><div class="choices">${Array.from({length:p.handCount},(_,i)=>`<button data-i="${i}">Position ${i+1}</button>`).join('')}</div></div>`);$('modalHost').querySelectorAll('button').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.i);closeModal();cb(i)})}
+function animateDraw(){
+  if(drawAnimating||!state?.drawn)return;
+  const src=document.querySelector('#deck .card:last-child'),target=$('centerAction');
+  if(!src||!target){mode='drawnMenu';render();return}
+  drawAnimating=true;
+  const a=src.getBoundingClientRect(),b=target.getBoundingClientRect(),el=document.createElement('div');
+  el.className='fly';el.innerHTML=card(null,true);
+  const bx=b.left+b.width/2-36, by=b.top;
+  el.style.left=a.left+'px';el.style.top=a.top+'px';
+  el.style.setProperty('--tx',(bx-a.left)+'px');el.style.setProperty('--ty',(by-a.top)+'px');
+  el.style.setProperty('--dx',((bx-a.left)*.45)+'px');el.style.setProperty('--dy',((by-a.top)-70)+'px');
+  document.body.appendChild(el);
+  setTimeout(()=>{el.remove();drawAnimating=false;mode='drawnMenu';render()},760);
+}
+function animateThrowFlourish(){
+  if(throwCardIndex===null)return;
+  const src=$('centerAction'),dst=$('pile');
+  if(!src||!dst)return;
+  const a=src.getBoundingClientRect(),b=dst.getBoundingClientRect(),el=document.createElement('div');
+  el.className='fly';el.innerHTML=card(null,true);
+  el.style.left=a.left+'px';el.style.top=a.top+'px';
+  el.style.setProperty('--tx',(b.left-a.left)+'px');el.style.setProperty('--ty',(b.top-a.top)+'px');
+  el.style.setProperty('--dx',((b.left-a.left)*.5)+'px');el.style.setProperty('--dy',((b.top-a.top)-45)+'px');
+  document.body.appendChild(el);setTimeout(()=>el.remove(),760);
+  $('pile').classList.add('pop');setTimeout(()=>$('pile').classList.remove('pop'),450);
+}
 function revealCard(title,cards,canSwitch=false){const html=cards.map(x=>`<div><div class="revealMeta">${esc(x.owner)} · position ${x.index+1}</div><div class="flipWrap"><div class="flipInner"><div class="flipFace">${card(null,true)}</div><div class="flipFace flipFront">${card(x.card,false)}</div></div></div></div>`).join('');showModal(`<div class="modal"><div class="modalTitle">${esc(title)}</div><div class="modalSub">The selected card${cards.length>1?'s are':' is'} revealed for 4 seconds.</div><div class="revealGrid">${html}</div><div class="timerBar"></div></div>`);setTimeout(()=>{if(canSwitch){showModal(`<div class="modal"><div class="modalTitle">Switch the exact two cards?</div><div class="modalSub">Only the two cards you just inspected may be switched.</div><div class="choices"><button id="keepKing">Keep</button><button id="switchKing" class="goldBtn">Switch</button></div></div>`);$('keepKing').onclick=()=>{closeModal();socket.emit('kingChoice',{switchCards:false})};$('switchKing').onclick=()=>{closeModal();socket.emit('kingChoice',{switchCards:true})}}else closeModal()},4000)}
-function useAbility(){const c=state?.drawn;if(!c)return;if(['8','9','10'].includes(c.r))return chooseOwn(`Look at one of your cards · ${c.r}`,i=>socket.emit('abilityLookOwn',{index:i}));if(c.r==='J')return chooseOwn('Jack · choose your card',i=>chooseOpponent('Choose the opponent',pid=>chooseOppCard('Choose their card',pid,j=>socket.emit('abilityJack',{ownIndex:i,targetId:pid,targetIndex:j}))));return chooseOwn(c.r==='Q'?'Queen · choose your card':'King / K♦ · choose your card',i=>chooseOpponent('Choose the opponent',pid=>chooseOppCard('Choose their card',pid,j=>socket.emit('abilityViewPair',{ownIndex:i,targetId:pid,targetIndex:j}))));}
 function roomSettings(){
   const host=state?.playerId===state?.hostId;
   showModal(`<div class="modal"><div class="modalTitle">Room Settings</div><div class="modalSub">${host?'Edit your private table before the game starts.':'Only the host can edit room settings.'}</div><div style="display:grid;gap:8px"><input id="roomTitleInput" class="field" maxlength="32" value="${esc(state?.title&&state.title!==state.code?state.title:'Private Table')}" placeholder="Room name"><button id="saveRoomSettings" class="goldBtn" ${host&&!state.started?'':'disabled'}>Save Room Settings</button><button id="settingsAddAi" ${host&&!state.started?'':'disabled'}>Add AI Player</button><button id="settingsStart" class="primary" ${host&&!state.started&&players().length>=2?'':'disabled'}>Start Game</button></div></div>`);
@@ -273,14 +547,45 @@ function roomSettings(){
 function leaveRoom(){
   showModal(`<div class="modal"><div class="modalTitle">Leave Room?</div><div class="modalSub">You can rejoin later with the room code if the room still exists.</div><div class="choices"><button id="cancelLeave">Cancel</button><button id="confirmLeave" class="danger">Leave Room</button></div></div>`);
   $('cancelLeave').onclick=closeModal;
-  $('confirmLeave').onclick=()=>{socket.emit('leaveRoom');closeModal();state=null;selected=null;localStorage.removeItem('switchiePlayerId');localStorage.removeItem('switchieRoomCode');$('game').style.display='none';$('lobby').style.display='grid'};
+  $('confirmLeave').onclick=()=>{socket.emit('leaveRoom');closeModal();state=null;resetUiMode();localStorage.removeItem('switchiePlayerId');localStorage.removeItem('switchieRoomCode');$('game').style.display='none';$('lobby').style.display='grid'};
 }
 function sendChat(){const text=$('chatInput').value.trim();if(!text)return;if(chatMode==='room')socket.emit('sendChat',{text});else{const toId=$('privateTo').value;if(!toId)return toast('Choose a player for private chat.');socket.emit('sendPrivateChat',{toId,text})}$('chatInput').value=''}
-$('create').onclick=()=>socket.emit('create',{name:$('name').value.trim()||'Player'});$('join').onclick=()=>socket.emit('join',{name:$('name').value.trim()||'Player',code:$('code').value.trim().toUpperCase(),playerId});$('drawBtn').onclick=()=>socket.emit('draw');$('playBtn').onclick=()=>{if(!state?.drawn)return;closeModal();$('pile').classList.add('pop');setTimeout(()=>$('pile').classList.remove('pop'),450);socket.emit('discardDrawn')};$('replaceBtn').onclick=()=>{if(selected===null)return;socket.emit('replace',{index:selected});selected=null;closeModal()};$('throwBtn').onclick=()=>{if(selected===null)return;animateThrow();socket.emit('throw',{index:selected});selected=null};$('knockBtn').onclick=()=>socket.emit('knock');$('abilityBtn').onclick=useAbility;$('sendChat').onclick=sendChat;$('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat()});$('roomTab').onclick=()=>{chatMode='room';renderChat()};$('privateTab').onclick=()=>{chatMode='private';renderChat()};$('copy').onclick=async()=>{if(!state?.code)return;const url=`${location.origin}/?room=${state.code}`;try{await navigator.clipboard.writeText(url);toast('Private room invite copied.')}catch{toast(url)}};
-$('invite').onclick=()=>$('copy').click();$('addAi').onclick=()=>{if(state?.playerId===state?.hostId&&!state.started)socket.emit('addAI');else toast('Only the host can add AI before the game starts.')};$('startGame').onclick=()=>{if(state?.playerId!==state?.hostId)return toast('Only the host can start the game.');socket.emit('start')};$('settings').onclick=roomSettings;$('leaveRoom').onclick=leaveRoom;$('newGame').onclick=()=>{state=null;selected=null;closeModal();localStorage.removeItem('switchiePlayerId');localStorage.removeItem('switchieRoomCode');$('game').style.display='none';$('lobby').style.display='grid';$('name').focus()};
+$('create').onclick=()=>socket.emit('create',{name:$('name').value.trim()||'Player'});
+$('join').onclick=()=>socket.emit('join',{name:$('name').value.trim()||'Player',code:$('code').value.trim().toUpperCase(),playerId});
+$('deck').onclick=()=>{ if(myTurn()&&!state?.drawn&&mode==='idle'&&!state?.ended){ socket.emit('draw'); } };
+$('knockBtn').onclick=()=>socket.emit('knock');
+$('sendChat').onclick=sendChat;$('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat()});
+$('roomTab').onclick=()=>{chatMode='room';renderChat()};$('privateTab').onclick=()=>{chatMode='private';renderChat()};
+$('copy').onclick=async()=>{if(!state?.code)return;const url=`${location.origin}/?room=${state.code}`;try{await navigator.clipboard.writeText(url);toast('Private room invite copied.')}catch{toast(url)}};
+$('invite').onclick=()=>$('copy').click();
+$('addAi').onclick=()=>{if(state?.playerId===state?.hostId&&!state.started)socket.emit('addAI');else toast('Only the host can add AI before the game starts.')};
+$('startGame').onclick=()=>{if(state?.playerId!==state?.hostId)return toast('Only the host can start the game.');socket.emit('start')};
+$('settings').onclick=roomSettings;$('leaveRoom').onclick=leaveRoom;
+$('newGame').onclick=()=>{state=null;resetUiMode();closeModal();localStorage.removeItem('switchiePlayerId');localStorage.removeItem('switchieRoomCode');$('game').style.display='none';$('lobby').style.display='grid';$('name').focus()};
+document.querySelector('.feltWrap').addEventListener('click',()=>{ if(mode==='idle')return; if(state?.drawn && ['pickReplace','pickOwnForAbility','pickOpponent','pickOppCard'].includes(mode)){ mode='drawnMenu'; uiOwnIndex=null; uiTargetPlayer=null; } else { resetUiMode(); } render(); });
+document.querySelector('.stage').addEventListener('click',(e)=>{ if(e.target.classList.contains('stage')||e.target.classList.contains('piles')||e.target.id==='statusPill'){ if(mode==='idle')return; if(state?.drawn && ['pickReplace','pickOwnForAbility','pickOpponent','pickOppCard'].includes(mode)){ mode='drawnMenu'; uiOwnIndex=null; uiTargetPlayer=null; } else { resetUiMode(); } render(); } });
 socket.on('joined',x=>{playerId=x.playerId;roomCode=x.code;localStorage.setItem('switchiePlayerId',playerId);localStorage.setItem('switchieRoomCode',roomCode);$('code').value=x.code;toast(`Private room ${x.code} ready.`)});
-socket.on('state',x=>{if(!x||!Array.isArray(x.players)){toast('Invalid game state received. Reconnecting…');return}const prev=lastDrawnKey;state=x;if(!state.drawn)selected=null;render();const next=state.drawn?state.drawn.r+state.drawn.s:'';if(state.started&&state.drawn&&next!==prev&&myTurn()){lastDrawnKey=next;setTimeout(()=>{if(state?.drawn&&state.drawn.r+state.drawn.s===next)animateDraw()},90)}else if(!state.drawn)lastDrawnKey='';});
-socket.on('privateChat',m=>{privateMessages.push(m);if(chatMode==='private')renderChat();toast(`Private message from ${m.from}`)});socket.on('errorMsg',x=>toast(x));socket.on('disconnect',()=>toast('Connection lost · reconnecting…'));socket.on('connect',()=>{const q=new URLSearchParams(location.search).get('room');const code=(q||roomCode||'').toUpperCase();if(code&&playerId)socket.emit('join',{name:$('name').value.trim()||'Player',code,playerId})});socket.on('reveal',x=>revealCard(x.kind==='own'?'Your card':x.kind==='king'?'King · cards revealed':'Queen · cards revealed',x.cards,!!x.canSwitch));socket.on('publicReveal',x=>{showModal(`<div class="modal"><div class="modalTitle">Wrong throw</div><div class="modalSub">${esc(x.name)} threw a non-matching card. Everyone sees the reveal.</div><div class="revealGrid">${card(x.thrown,false,'cardEnter')}${card(x.pile,false,'cardEnter')}</div><div class="timerBar"></div></div>`);setTimeout(closeModal,4000)});
+socket.on('state',x=>{
+  if(!x||!Array.isArray(x.players)){toast('Invalid game state received. Reconnecting…');return}
+  const prevTurn=state?state.turn:null;
+  state=x;
+  if(!state.drawn && ['drawnMenu','pickReplace','pickOwnForAbility','pickOpponent','pickOppCard'].includes(mode)) resetUiMode();
+  if(!myTurn() && mode!=='idle' && mode!=='pickThrow') resetUiMode();
+  const next=state.drawn?state.drawn.r+state.drawn.s:'';
+  if(state.started&&state.drawn&&next!==lastDrawnKey&&myTurn()){
+    lastDrawnKey=next;render();
+    setTimeout(()=>{if(state?.drawn&&state.drawn.r+state.drawn.s===next)animateDraw()},90);
+  }else{
+    if(!state.drawn)lastDrawnKey='';
+    render();
+  }
+});
+socket.on('privateChat',m=>{privateMessages.push(m);if(chatMode==='private')renderChat();toast(`Private message from ${m.from}`)});
+socket.on('errorMsg',x=>toast(x));
+socket.on('disconnect',()=>toast('Connection lost · reconnecting…'));
+socket.on('connect',()=>{const q=new URLSearchParams(location.search).get('room');const code=(q||roomCode||'').toUpperCase();if(code&&playerId)socket.emit('join',{name:$('name').value.trim()||'Player',code,playerId})});
+socket.on('reveal',x=>revealCard(x.kind==='own'?'Your card':x.kind==='king'?'King · cards revealed':'Queen · cards revealed',x.cards,!!x.canSwitch));
+socket.on('publicReveal',x=>{showModal(`<div class="modal"><div class="modalTitle">Wrong throw</div><div class="modalSub">${esc(x.name)} threw a non-matching card. Everyone sees the reveal.</div><div class="revealGrid">${card(x.thrown,false,'cardEnter')}${card(x.pile,false,'cardEnter')}</div><div class="timerBar"></div></div>`);setTimeout(closeModal,4000)});
 if(new URLSearchParams(location.search).get('room'))$('code').value=new URLSearchParams(location.search).get('room').toUpperCase();
 </script>
 </body></html>

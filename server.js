@@ -57,6 +57,7 @@ function publicState(room, socketId){
     players: room.players.map(p=>({id:p.id,name:p.name,ai:p.ai,connected:p.ai ? true : !!p.socketId,handCount:p.hand.length})) ,
     logs: room.logs.slice(0,24), scores: room.scores || null,
     pendingKing: room.pendingKing?.ownerId === me?.id ? { targetId:room.pendingKing.targetId, ownIndex:room.pendingKing.ownIndex, targetIndex:room.pendingKing.targetIndex } : null,
+    throwOpen: !!room.throwOpen, throwUntil: room.throwOpen ? room.throwUntil : 0,
     playerId: me?.id || null,
     chat: room.chat.slice(0,50).map(m=>({id:m.id,from:m.from,text:m.text,time:m.time,kind:m.kind,toId:m.toId}))
   };
@@ -67,7 +68,7 @@ function emitRoom(room){
 function createRoom(hostName){
   const code=roomId();
   const host={id:token(),socketId:null,name:String(hostName||'Player').slice(0,20),ai:false,hand:[]};
-  const room={code,hostId:host.id,players:[host],deck:[],pile:[],turn:0,started:false,ended:false,knocked:false,finalTurns:0,drawn:{},title:code,logs:['Lobby created. Invite friends or add AI, then start the game.'],scores:null,winner:null,pendingKing:null,chat:[]};
+  const room={code,hostId:host.id,players:[host],deck:[],pile:[],turn:0,started:false,ended:false,knocked:false,finalTurns:0,drawn:{},title:code,logs:['Lobby created. Invite friends or add AI, then start the game.'],scores:null,winner:null,pendingKing:null,chat:[],throwOpen:false,throwUntil:0,throwTimer:null};
   rooms.set(code,room); return room;
 }
 function addAI(room){
@@ -84,6 +85,8 @@ function startGame(room){
   room.deck=makeDeck();
   for(const p of room.players) p.hand=room.deck.splice(0,4);
   room.pile=[room.deck.pop()]; room.turn=0; room.started=true; room.ended=false; room.knocked=false; room.finalTurns=0; room.drawn={}; room.pendingKing=null; room.scores=null; room.winner=null;
+  if(room.throwTimer) clearTimeout(room.throwTimer);
+  room.throwOpen=false; room.throwUntil=0; room.throwTimer=null;
   room.logs=['Game started.']; room.chat=[];
 }
 function ensureTurn(room,socket){
@@ -109,6 +112,39 @@ function beginKnock(room,p){
   room.knocked=true; room.finalTurns=room.players.length-1; log(room,`🔔 ${p.name} knocked. Everyone else gets one final turn.`);
 }
 function randomIndex(n){ return n>0 ? Math.floor(Math.random()*n) : -1; }
+const THROW_WINDOW_MS = 6000;
+function openThrowWindow(room, cb){
+  if(room.throwTimer) clearTimeout(room.throwTimer);
+  room.throwOpen = true;
+  room.throwUntil = Date.now() + THROW_WINDOW_MS;
+  emitRoom(room);
+  aiWindowThrows(room);
+  room.throwTimer = setTimeout(()=>{
+    room.throwOpen = false; room.throwUntil = 0; room.throwTimer = null;
+    if(room.ended) return;
+    emitRoom(room);
+    cb();
+  }, THROW_WINDOW_MS);
+}
+function aiWindowThrows(room){
+  const top = room.pile.at(-1);
+  for(const ai of room.players.filter(x=>x.ai)){
+    if(!room.throwOpen) return;
+    const idx = ai.hand.findIndex(c=>sameRank(c,top));
+    if(idx<0 || Math.random()<0.5) continue;
+    const delay = 700 + Math.random()*4500;
+    setTimeout(()=>{
+      if(!room.throwOpen || room.ended) return;
+      const top2 = room.pile.at(-1);
+      const idx2 = ai.hand.findIndex(c=>sameRank(c,top2));
+      if(idx2<0) return;
+      const c = ai.hand.splice(idx2,1)[0];
+      log(room, `⚡ ${ai.name} threw ${label(c)} into the window.`);
+      if(emptyWin(room)) return;
+      emitRoom(room);
+    }, delay);
+  }
+}
 
 function aiSay(room,p){
   const lines=['Nice move.','Let’s play!','Interesting…','Your turn.','I’m watching.','Good luck!'];
@@ -148,33 +184,28 @@ function aiTurn(room,p){
 
 function advanceToNext(room){
   if(room.ended) return emitRoom(room);
-  const step=()=>{
+  room.turn=(room.turn+1)%room.players.length;
+  const p=room.players[room.turn];
+  if(!p.ai){ emitRoom(room); return; }
+  const wasKnocked=room.knocked;
+  setTimeout(()=>{
+    if(room.ended || room.turn!==playerIndex(room,p.id)) return;
+    aiTurn(room,p);
     if(room.ended) return emitRoom(room);
-    let guard=0;
-    do{
-      room.turn=(room.turn+1)%room.players.length;
-      const p=room.players[room.turn];
-      if(!p.ai){ emitRoom(room); return; }
-      const wasKnocked=room.knocked;
-      setTimeout(()=>{
-        if(room.ended || room.turn!==playerIndex(room,p.id)) return;
-        aiTurn(room,p);
-        if(room.ended) return emitRoom(room);
-        if(room.knocked && wasKnocked){ room.finalTurns--; if(room.finalTurns<=0) return finishScore(room); }
-        emitRoom(room);
-        if(room.ended) return;
-        step();
-      }, 850);
-      return;
-    }while(++guard<room.players.length+2);
-    emitRoom(room);
-  };
-  step();
+    openThrowWindow(room, ()=>{
+      if(room.ended) return;
+      if(room.knocked && wasKnocked){ room.finalTurns--; if(room.finalTurns<=0) return finishScore(room); }
+      advanceToNext(room);
+    });
+  }, 850);
 }
 function finishHumanAction(room){
   if(emptyWin(room)) return emitRoom(room);
-  if(room.knocked){ room.finalTurns--; if(room.finalTurns<=0) return finishScore(room); }
-  advanceToNext(room);
+  openThrowWindow(room, ()=>{
+    if(room.ended) return;
+    if(room.knocked){ room.finalTurns--; if(room.finalTurns<=0) return finishScore(room); }
+    advanceToNext(room);
+  });
 }
 function finishNewKnock(room){ if(emptyWin(room)) return emitRoom(room); advanceToNext(room); }
 
@@ -187,12 +218,34 @@ io.on('connection', socket=>{
   socket.on('draw',()=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket);if(room.drawn[p.id])throw new Error('You already drew a card.');recycleDiscardIntoDeck(room);if(!room.deck.length)throw new Error('There are no cards left to draw.');room.drawn[p.id]=room.deck.pop();log(room,`${p.name} drew a card.`);emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('discardDrawn',()=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket),c=room.drawn[p.id];if(!c)throw new Error('Draw a card first.');room.pile.push(c);delete room.drawn[p.id];log(room,`${p.name} played ${label(c)} to the pile.`);finishHumanAction(room);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('replace',({index}={})=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket),c=room.drawn[p.id];if(!c)throw new Error('Draw a card first.');if(!Number.isInteger(index)||index<0||index>=p.hand.length)throw new Error('Invalid card position.');const old=p.hand[index];p.hand[index]=c;room.pile.push(old);delete room.drawn[p.id];log(room,`${p.name} replaced position ${index+1}.`);finishHumanAction(room);}catch(e){socket.emit('errorMsg',e.message)}});
-  socket.on('throw',({index}={})=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket);if(!Number.isInteger(index)||index<0||index>=p.hand.length)throw new Error('Invalid card position.');const c=p.hand[index],top=room.pile.at(-1);if(sameRank(c,top)){p.hand.splice(index,1);log(room,`✅ ${p.name} correctly threw ${label(c)} onto ${label(top)}.`);finishHumanAction(room);}else{p.hand.splice(index,1);p.hand.push(c,top);log(room,`❌ ${p.name} made a wrong throw. ${label(c)} was revealed and both cards were taken.`);for(const viewer of connectedHumans(room))io.to(viewer.socketId).emit('publicReveal',{name:p.name,thrown:cardPublic(c),pile:cardPublic(top),seconds:4});emitRoom(room);setTimeout(()=>{if(!room.ended&&room.turn===playerIndex(room,p.id))finishHumanAction(room)},4050);}}catch(e){socket.emit('errorMsg',e.message)}});
+  socket.on('throw',({index}={})=>{try{
+    const room=roomForSocket(socket);
+    if(!room) throw new Error('Join a room first.');
+    if(!room.started || room.ended) throw new Error('The game is not active.');
+    const p=room.players.find(x=>x.socketId===socket.id);
+    if(!p) throw new Error('You are not in this room.');
+    if(!Number.isInteger(index)||index<0||index>=p.hand.length) throw new Error('Invalid card position.');
+    const isMyPrimaryTurn = room.turn===playerIndex(room,p.id) && !room.drawn[p.id];
+    if(!isMyPrimaryTurn && !room.throwOpen) throw new Error('You can only throw on your turn or during the throw window.');
+    const c=p.hand[index],top=room.pile.at(-1);
+    if(sameRank(c,top)){
+      p.hand.splice(index,1);
+      log(room, isMyPrimaryTurn ? `✅ ${p.name} correctly threw ${label(c)} onto ${label(top)}.` : `⚡ ${p.name} threw ${label(c)} into the window onto ${label(top)}.`);
+      if(emptyWin(room)) return emitRoom(room);
+      if(isMyPrimaryTurn) finishHumanAction(room); else emitRoom(room);
+    }else{
+      p.hand.splice(index,1);p.hand.push(c,top);
+      log(room,`❌ ${p.name} made a wrong throw. ${label(c)} was revealed and both cards were taken.`);
+      for(const viewer of connectedHumans(room))io.to(viewer.socketId).emit('publicReveal',{name:p.name,thrown:cardPublic(c),pile:cardPublic(top),seconds:4});
+      emitRoom(room);
+      if(isMyPrimaryTurn) setTimeout(()=>{if(!room.ended&&room.turn===playerIndex(room,p.id))finishHumanAction(room)},4050);
+    }
+  }catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('knock',()=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket);if(room.drawn[p.id])throw new Error('Finish your drawn card first.');if(room.knocked)throw new Error('Someone already knocked.');beginKnock(room,p);finishNewKnock(room);}catch(e){socket.emit('errorMsg',e.message)}});
-  socket.on('abilityLookOwn',({index}={})=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket),c=room.drawn[p.id];if(!c||!['8','9','10'].includes(c.r))throw new Error('Draw an 8, 9 or 10 first.');if(!Number.isInteger(index)||index<0||index>=p.hand.length)throw new Error('Invalid card position.');room.pile.push(c);delete room.drawn[p.id];log(room,`${p.name} used ${c.r} to look at position ${index+1}.`);socket.emit('reveal',{kind:'own',cards:[{owner:p.name,index,card:cardPublic(p.hand[index])}],seconds:4});emitRoom(room);setTimeout(()=>{if(!room.ended&&room.turn===playerIndex(room,p.id))advanceToNext(room);},4050);}catch(e){socket.emit('errorMsg',e.message)}});
+  socket.on('abilityLookOwn',({index}={})=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket),c=room.drawn[p.id];if(!c||!['8','9','10'].includes(c.r))throw new Error('Draw an 8, 9 or 10 first.');if(!Number.isInteger(index)||index<0||index>=p.hand.length)throw new Error('Invalid card position.');room.pile.push(c);delete room.drawn[p.id];log(room,`${p.name} used ${c.r} to look at position ${index+1}.`);socket.emit('reveal',{kind:'own',cards:[{owner:p.name,index,card:cardPublic(p.hand[index])}],seconds:4});emitRoom(room);setTimeout(()=>{if(!room.ended&&room.turn===playerIndex(room,p.id))finishHumanAction(room);},4050);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('abilityJack',({ownIndex,targetId,targetIndex}={})=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket),o=playerById(room,targetId),c=room.drawn[p.id];if(!c||c.r!=='J')throw new Error('Draw a Jack first.');if(!o||o===p||ownIndex<0||targetIndex<0||ownIndex>=p.hand.length||targetIndex>=o.hand.length)throw new Error('Invalid card position.');room.pile.push(c);delete room.drawn[p.id];[p.hand[ownIndex],o.hand[targetIndex]]=[o.hand[targetIndex],p.hand[ownIndex]];log(room,`${p.name} used Jack to blindly switch with ${o.name}.`);finishHumanAction(room);}catch(e){socket.emit('errorMsg',e.message)}});
-  socket.on('abilityViewPair',({ownIndex,targetId,targetIndex}={})=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket),o=playerById(room,targetId),c=room.drawn[p.id];if(!c||!['Q','K'].includes(c.r))throw new Error('Draw a Queen or King first.');if(!o||o===p||ownIndex<0||targetIndex<0||ownIndex>=p.hand.length||targetIndex>=o.hand.length)throw new Error('Invalid card position.');room.pile.push(c);delete room.drawn[p.id];room.pendingKing=c.r==='K'?{ownerId:p.id,targetId:o.id,ownIndex,targetIndex}:null;log(room,`${p.name} used ${c.r} to inspect two cards.`);socket.emit('reveal',{kind:c.r==='K'?'king':'queen',cards:[{owner:p.name,index:ownIndex,card:cardPublic(p.hand[ownIndex])},{owner:o.name,index:targetIndex,card:cardPublic(o.hand[targetIndex])}],seconds:4,canSwitch:c.r==='K'});emitRoom(room);setTimeout(()=>{if(room.ended||room.turn!==playerIndex(room,p.id))return;if(c.r==='Q'){room.pendingKing=null;advanceToNext(room);}},4050);}catch(e){socket.emit('errorMsg',e.message)}});
-  socket.on('kingChoice',({switchCards}={})=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket);const k=room.pendingKing;if(!k||k.ownerId!==p.id)throw new Error('No pending King action.');const o=playerById(room,k.targetId);if(switchCards){[p.hand[k.ownIndex],o.hand[k.targetIndex]]=[o.hand[k.targetIndex],p.hand[k.ownIndex]];log(room,`${p.name} used King to switch the exact two cards they inspected.`);}else log(room,`${p.name} kept the exact two cards they inspected.`);room.pendingKing=null;advanceToNext(room);}catch(e){socket.emit('errorMsg',e.message)}});
+  socket.on('abilityViewPair',({ownIndex,targetId,targetIndex}={})=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket),o=playerById(room,targetId),c=room.drawn[p.id];if(!c||!['Q','K'].includes(c.r))throw new Error('Draw a Queen or King first.');if(!o||o===p||ownIndex<0||targetIndex<0||ownIndex>=p.hand.length||targetIndex>=o.hand.length)throw new Error('Invalid card position.');room.pile.push(c);delete room.drawn[p.id];room.pendingKing=c.r==='K'?{ownerId:p.id,targetId:o.id,ownIndex,targetIndex}:null;log(room,`${p.name} used ${c.r} to inspect two cards.`);socket.emit('reveal',{kind:c.r==='K'?'king':'queen',cards:[{owner:p.name,index:ownIndex,card:cardPublic(p.hand[ownIndex])},{owner:o.name,index:targetIndex,card:cardPublic(o.hand[targetIndex])}],seconds:4,canSwitch:c.r==='K'});emitRoom(room);setTimeout(()=>{if(room.ended||room.turn!==playerIndex(room,p.id))return;if(c.r==='Q'){room.pendingKing=null;finishHumanAction(room);}},4050);}catch(e){socket.emit('errorMsg',e.message)}});
+  socket.on('kingChoice',({switchCards}={})=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket);const k=room.pendingKing;if(!k||k.ownerId!==p.id)throw new Error('No pending King action.');const o=playerById(room,k.targetId);if(switchCards){[p.hand[k.ownIndex],o.hand[k.targetIndex]]=[o.hand[k.targetIndex],p.hand[k.ownIndex]];log(room,`${p.name} used King to switch the exact two cards they inspected.`);}else log(room,`${p.name} kept the exact two cards they inspected.`);room.pendingKing=null;finishHumanAction(room);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('sendChat',({text}={})=>{try{const room=roomForSocket(socket),p=room?.players.find(x=>x.socketId===socket.id);if(!room||!p)throw new Error('Join a room first.');const msg=addRoomChat(room,p.name,text);if(!msg)throw new Error('Message is empty.');emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('sendPrivateChat',({toId,text}={})=>{try{const room=roomForSocket(socket),from=room?.players.find(x=>x.socketId===socket.id),to=room?.players.find(x=>x.id===toId);if(!room||!from||!to)throw new Error('Choose a player first.');if(to.ai)throw new Error('AI players do not accept private messages.');const msg=addRoomChat(room,from.name,text,'private',to.id);if(!msg)throw new Error('Message is empty.');for(const id of [from.id,to.id]){const target=playerById(room,id);if(target?.socketId)io.to(target.socketId).emit('privateChat',msg);}}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('state',()=>{const room=roomForSocket(socket);if(room)socket.emit('state',publicState(room,socket.id));});
