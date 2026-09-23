@@ -122,8 +122,7 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 .copy{width:34px;min-height:30px;padding:0;font-size:17px}
 .menuGrid{display:grid;grid-template-columns:1fr;gap:1px;padding-top:3px}
 .menuGrid button{border:0;box-shadow:none;background:transparent;text-align:left;font-size:9px;min-height:20px;padding:3px 10px}
-.menuGrid #addAi{display:none}
-.menuGrid #newGame{order:1}.menuGrid #invite{order:2}.menuGrid #startGame{order:3}.menuGrid #settings{order:4}.menuGrid #leaveRoom{order:5}
+.menuGrid #newGame{order:1}.menuGrid #addAi{order:2}.menuGrid #startGame{order:3}.menuGrid #invite{order:4}.menuGrid #settings{order:5}.menuGrid #howToPlay{order:6}.menuGrid #leaveRoom{order:7}
 .menuGrid button.active{background:#4a3512;color:#f4d896}
 .menuGrid button:hover{background:#fff1;transform:none}
 .mi{color:var(--gold);width:17px;display:inline-block}
@@ -273,6 +272,19 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 .modalHost{position:fixed;inset:0;z-index:2000;display:none;place-items:center;background:#0008;backdrop-filter:blur(4px)}
 .modalHost.open{display:grid}
 .modal{width:min(470px,88vw);background:linear-gradient(145deg,#0b1511f7,#020705f7);border:1px solid #e4bd65;border-radius:13px;box-shadow:0 25px 70px #000d,0 0 35px #d3ad5220;padding:18px;animation:modalIn .24s ease}
+.rulesModal{width:min(760px,92vw);max-height:min(82vh,760px);overflow:auto;padding:22px 24px 24px;position:relative;background:linear-gradient(145deg,rgba(7,24,17,.985),rgba(1,8,5,.985));border-color:#e8c96f;box-shadow:0 28px 90px #000e,0 0 45px rgba(214,177,84,.14),inset 0 1px rgba(255,255,255,.08)}
+.rulesModal:before{content:"";position:absolute;inset:7px;border:1px solid rgba(224,188,97,.16);border-radius:9px;pointer-events:none}
+.rulesClose{position:absolute;top:10px;right:10px;width:36px;min-height:36px;padding:0;border-radius:50%;font-size:18px;line-height:1;background:linear-gradient(180deg,#3b2b12,#171008);border-color:#d9b65c;color:#f4dfaa;z-index:2}
+.rulesHeader{padding-right:46px;margin-bottom:16px}
+.rulesHeader .modalTitle{text-align:left;font-size:25px}
+.rulesIntro{font-size:10px;color:#c8bea5;line-height:1.55;margin-top:6px}
+.rulesGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.ruleCard{background:linear-gradient(145deg,rgba(2,12,8,.78),rgba(0,5,4,.72));border:1px solid rgba(224,188,97,.25);border-radius:10px;padding:11px 12px;box-shadow:inset 0 1px rgba(255,255,255,.04)}
+.ruleCard h3{margin:0 0 7px;color:#efd28a;font:700 13px Georgia,serif}
+.ruleCard p,.ruleCard li{font-size:9.5px;line-height:1.5;color:#ded5bd}
+.ruleCard ul{margin:0;padding-left:16px}.ruleCard li+li{margin-top:4px}
+.ruleNote{margin-top:10px;padding:9px 11px;border-radius:8px;background:rgba(102,72,20,.22);border:1px solid rgba(224,188,97,.22);font-size:9px;color:#d8cba8;line-height:1.45}
+@media(max-width:680px){.rulesGrid{grid-template-columns:1fr}.rulesModal{padding:18px 16px 20px}.rulesHeader .modalTitle{font-size:21px}}
 .modalTitle{font:700 20px Georgia,serif;color:#efd28a;text-align:center}
 .modalSub{font-size:10px;color:#c9c0a9;text-align:center;margin:6px 0 12px}
 .choices{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
@@ -330,7 +342,7 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
         <div id="topOpps" class="topOpps"></div>
         <div class="roomMenu">
           <div class="codeRow"><div><div class="codeLabel">ROOM CODE</div><div id="roomCode" class="code">------</div><div id="roomTitle" class="roomTitle">Private Table</div></div><button id="copy" class="copy">▣</button></div>
-          <div class="menuGrid"><button id="newGame"><span class="mi">♦</span>New Game</button><button id="addAi"><span class="mi">♟</span>Add AI Player</button><button id="startGame" class="active"><span class="mi">▶</span>Play vs AI</button><button id="settings"><span class="mi">⚙</span>Settings</button><button id="invite"><span class="mi">⌁</span>Invite Friends</button><button id="leaveRoom"><span class="mi">?</span>How to Play</button></div>
+          <div class="menuGrid"><button id="newGame"><span class="mi">♦</span>New Game</button><button id="addAi"><span class="mi">♟</span>Add AI Player</button><button id="startGame" class="active"><span class="mi">▶</span>Start Game</button><button id="invite"><span class="mi">⌁</span>Invite Friends</button><button id="settings"><span class="mi">⚙</span>Settings</button><button id="howToPlay"><span class="mi">?</span>How to Play</button><button id="leaveRoom"><span class="mi">↩</span>Leave Room</button></div>
         </div>
       </header>
       <div class="content">
@@ -488,7 +500,7 @@ function formatTime(iso){try{return new Date(iso).toLocaleTimeString([], {hour:'
 function renderChat(){const roomMsgs=(state?.chat||[]).filter(m=>m.kind==='room');let html='';if(chatMode==='room'){html=roomMsgs.slice().reverse().map(m=>`<div class="msg"><div class="avatar"></div><div><div class="msgMeta">${esc(m.from)} · ${formatTime(m.time)}</div><div class="bubble">${esc(m.text)}</div></div></div>`).join('')}else{html=privateMessages.slice(-30).map(m=>`<div class="msg"><div class="avatar"></div><div><div class="msgMeta">${esc(m.from)} · ${formatTime(m.time)}</div><div class="bubble private">${esc(m.text)}</div></div></div>`).join('')}$('chatMessages').innerHTML=html||`<div class="msgMeta" style="padding:12px 2px">${chatMode==='room'?'No messages yet.':'Private messages will appear here.'}</div>`;$('privateRow').style.display=chatMode==='private'?'flex':'none';$('roomTab').classList.toggle('active',chatMode==='room');$('privateTab').classList.toggle('active',chatMode==='private');const opts=players().filter(p=>p.id!==state?.playerId&&!p.ai);$('privateTo').innerHTML=opts.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')||'<option>No friends online</option>'}
 
 function statusText(){
-  if(!state?.started) return state?.playerId===state?.hostId?'Add AI Player or invite a friend, then press Play vs AI.':'Waiting for the host to start the game.';
+  if(!state?.started) return state?.playerId===state?.hostId?'Add AI Player or invite a friend, then press Start Game.':'Waiting for the host to start the game.';
   if(state.ended) return 'The hand is over.';
   if(mode==='pickThrow') return 'Confirm the card you want to throw.';
   if(mode==='drawnMenu') return 'Use its ability, replace a face-down card, or discard it.';
@@ -566,6 +578,24 @@ function animateThrowFlourish(){
   $('pile').classList.add('pop');setTimeout(()=>$('pile').classList.remove('pop'),450);
 }
 function revealCard(title,cards,canSwitch=false){const html=cards.map(x=>`<div><div class="revealMeta">${esc(x.owner)} · position ${x.index+1}</div><div class="flipWrap"><div class="flipInner"><div class="flipFace">${card(null,true)}</div><div class="flipFace flipFront">${card(x.card,false)}</div></div></div></div>`).join('');showModal(`<div class="modal"><div class="modalTitle">${esc(title)}</div><div class="modalSub">The selected card${cards.length>1?'s are':' is'} revealed for 4 seconds.</div><div class="revealGrid">${html}</div><div class="timerBar"></div></div>`);setTimeout(()=>{if(canSwitch){showModal(`<div class="modal"><div class="modalTitle">Switch the exact two cards?</div><div class="modalSub">Only the two cards you just inspected may be switched.</div><div class="choices"><button id="keepKing">Keep</button><button id="switchKing" class="goldBtn">Switch</button></div></div>`);$('keepKing').onclick=()=>{closeModal();socket.emit('kingChoice',{switchCards:false})};$('switchKing').onclick=()=>{closeModal();socket.emit('kingChoice',{switchCards:true})}}else closeModal()},4000)}
+function showRules(){
+  showModal(`<div class="modal rulesModal" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+    <button id="rulesClose" class="rulesClose" type="button" aria-label="Close rules">×</button>
+    <div class="rulesHeader">
+      <div id="rulesTitle" class="modalTitle">How to Play Switchie</div>
+      <div class="rulesIntro">Keep your cards hidden, remember what you learn, and use the discard pile to make your moves. Positions never change during the game.</div>
+    </div>
+    <div class="rulesGrid">
+      <section class="ruleCard"><h3>Setup</h3><ul><li>A standard 52-card deck is used.</li><li>Each player starts with 4 cards face down in fixed positions.</li><li>You normally cannot look at your own hidden cards.</li><li>You may see a card when you draw it, use an ability, or reveal it after a failed throw.</li></ul></section>
+      <section class="ruleCard"><h3>Your Turn</h3><ul><li>Draw the top card and look at it.</li><li>Either discard the drawn card directly, or replace one hidden card in its exact position.</li><li>The old hidden card goes onto the discard pile.</li><li>Your remaining cards can never be rearranged.</li></ul></section>
+      <section class="ruleCard"><h3>Throw a Hidden Card</h3><ul><li>If one of your hidden cards matches the top discard by rank, throw it onto the pile.</li><li>A successful throw permanently removes that card.</li><li>If the throw is wrong, the thrown card is revealed to everyone.</li><li>You then take both the wrong card and the previous discard card, adding 2 cards to your hand.</li></ul></section>
+      <section class="ruleCard"><h3>Card Values</h3><ul><li>A = 1 · 2–10 = face value · J = 11 · Q = 12 · K = 13.</li><li>K♦ is worth −1 point when it remains face down at scoring.</li><li>The K♦ still has the King ability when drawn.</li></ul></section>
+      <section class="ruleCard"><h3>Special Abilities</h3><ul><li><strong>8 / 9 / 10:</strong> Look at one of your own hidden cards.</li><li><strong>J:</strong> Blindly switch one of your cards with another player's card.</li><li><strong>Q:</strong> Look at one of your cards and one opponent's card.</li><li><strong>K / K♦:</strong> Look at one of yours and one opponent's card, then optionally switch those exact cards.</li></ul><div class="ruleNote">Special abilities only activate when that special card is drawn and played directly onto the discard pile.</div></section>
+      <section class="ruleCard"><h3>Knock & Winning</h3><ul><li>If you believe your total is 4 points or fewer, you may knock instead of taking your turn.</li><li>After a knock, every other player gets one final turn.</li><li>Everyone then reveals their remaining cards and the lowest score wins.</li><li>If you successfully throw away your last card, you win immediately.</li></ul></section>
+    </div>
+  </div>`);
+  $('rulesClose').onclick=closeModal;
+}
 function roomSettings(){
   const host=state?.playerId===state?.hostId;
   showModal(`<div class="modal"><div class="modalTitle">Room Settings</div><div class="modalSub">${host?'Edit your private table before the game starts.':'Only the host can edit room settings.'}</div><div style="display:grid;gap:8px"><input id="roomTitleInput" class="field" maxlength="32" value="${esc(state?.title&&state.title!==state.code?state.title:'Private Table')}" placeholder="Room name"><button id="saveRoomSettings" class="goldBtn" ${host&&!state.started?'':'disabled'}>Save Room Settings</button><button id="settingsAddAi" ${host&&!state.started?'':'disabled'}>Add AI Player</button><button id="settingsStart" class="primary" ${host&&!state.started&&players().length>=2?'':'disabled'}>Start Game</button></div></div>`);
@@ -587,9 +617,11 @@ $('sendChat').onclick=sendChat;$('chatInput').addEventListener('keydown',e=>{if(
 $('roomTab').onclick=()=>{chatMode='room';renderChat()};$('privateTab').onclick=()=>{chatMode='private';renderChat()};
 $('copy').onclick=async()=>{if(!state?.code)return;const url=`${location.origin}/?room=${state.code}`;try{await navigator.clipboard.writeText(url);toast('Private room invite copied.')}catch{toast(url)}};
 $('invite').onclick=()=>$('copy').click();
-$('addAi').onclick=()=>{if(state?.playerId===state?.hostId&&!state.started)socket.emit('addAI');else toast('Only the host can add AI before the game starts.')};
-$('startGame').onclick=()=>{if(state?.playerId!==state?.hostId)return toast('Only the host can start the game.');socket.emit('start')};
-$('settings').onclick=roomSettings;$('leaveRoom').onclick=leaveRoom;
+$('addAi').onclick=()=>{if(!state)return toast('Join a room first.');if(state.playerId!==state.hostId)return toast('Only the host can add AI.');if(state.started)return toast('The game has already started.');socket.emit('addAI')};
+$('startGame').onclick=()=>{if(!state)return toast('Join a room first.');if(state.playerId!==state.hostId)return toast('Only the host can start the game.');if(state.started)return toast('The game has already started.');if(players().length<2)return toast('Add at least one friend or AI before starting.');socket.emit('start')};
+$('settings').onclick=roomSettings;
+$('howToPlay').onclick=showRules;
+$('leaveRoom').onclick=leaveRoom;
 $('newGame').onclick=()=>{state=null;resetUiMode();closeModal();localStorage.removeItem('switchiePlayerId');localStorage.removeItem('switchieRoomCode');$('game').style.display='none';$('lobby').style.display='grid';$('name').focus()};
 document.querySelector('.feltWrap').addEventListener('click',()=>{ if(mode==='idle')return; if(state?.drawn && ['pickReplace','pickOwnForAbility','pickOpponent','pickOppCard'].includes(mode)){ mode='drawnMenu'; uiOwnIndex=null; uiTargetPlayer=null; } else { resetUiMode(); } render(); });
 document.querySelector('.stage').addEventListener('click',(e)=>{ if(e.target.classList.contains('stage')||e.target.classList.contains('piles')||e.target.id==='statusPill'){ if(mode==='idle')return; if(state?.drawn && ['pickReplace','pickOwnForAbility','pickOpponent','pickOppCard'].includes(mode)){ mode='drawnMenu'; uiOwnIndex=null; uiTargetPlayer=null; } else { resetUiMode(); } render(); } });
