@@ -311,32 +311,77 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 @keyframes timerUrgent{from{transform:translateX(-50%) scale(1)}to{transform:translateX(-50%) scale(1.06)}}
 @keyframes pickPulse{0%,100%{filter:drop-shadow(0 0 3px #ffdb70aa)}50%{filter:drop-shadow(0 0 12px #ffdb70)}}
 
-/* ===== Readability and layout refinements ===== */
-.panelTitle{font-size:18px}
-.logLine{font-size:11px;line-height:1.42}
-.abilityText{font-size:11px;line-height:1.5}
-.valuesText{font-size:10px;line-height:1.5}
-.valuesText ul{margin:7px 0 0;padding-left:20px}
-.valuesText li{margin:3px 0}
-.statusPill{top:43%;font-size:13px;padding:8px 20px;z-index:30}
-.rightCol{padding-top:105px}
-.ability{height:112px;min-height:112px;flex-basis:112px}
-.roomMenu{z-index:5000}
-.centerAction{z-index:1200}
-.centerAction.drawnMode{flex-direction:row;align-items:center}
-.centerAction.drawnMode .caSide{min-width:230px}
-.caPrompt{font-size:12px;padding:9px 14px}
-.caButtons{gap:9px}
-.caButtons button{font-size:11px;min-height:42px;padding:9px 15px}
-.centerAction:not(.drawnMode) .caSide{display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-width:220px}
-.centerAction:not(.drawnMode) .caButtons{flex-direction:column;align-items:stretch;width:100%}
-.centerAction:not(.drawnMode) .caButtons button{width:100%}
-.modalHost{z-index:9000}
-.flipWrap,.flipInner,.flipFace{z-index:9100!important}
-.flipFront,.flipFront .card.face{z-index:9200!important}
 @media(max-width:1150px){.header{grid-template-columns:195px 1fr 145px}.content{grid-template-columns:190px minmax(0,1fr) 245px}.roomMenu{width:145px}.topOpps{gap:10px}.opp{min-width:140px;width:160px;flex:0 1 160px}.bottom{grid-template-columns:1fr}.slot{width:67px;height:96px}.card{width:62px;height:88px}.hand{gap:7px}}
 @media(max-width:880px){.app{padding:5px}.table{border-radius:24px}.shell{grid-template-rows:66px 1fr 118px;padding:6px 8px}.header{grid-template-columns:160px 1fr 170px}.logo{font-size:44px}.tag{font-size:7px;letter-spacing:2px}.topOpps{gap:6px}.opp{padding:6px 8px;min-width:110px}.avatar{width:24px;height:24px;flex-basis:24px}.name{font-size:9px}.miniBack{width:23px;height:33px}.content{grid-template-columns:170px minmax(260px,1fr) 220px;gap:6px}.bottom{grid-template-columns:1fr;padding:12px 5% 6px}.slot{width:54px;height:76px}.card{width:54px;height:76px}.hand{gap:4px}.youTitle{font-size:16px}.footerRule{font-size:6px}.panelTitle{font-size:13px}.logLine,.valuesText,.abilityText{font-size:7.5px}.roomMenu{width:170px}.menuGrid button{font-size:8px}.code{font-size:15px}.throwRing{right:-46px;width:44px;height:44px}}
 @media(max-width:680px){.shell{grid-template-rows:54px 1fr 96px}.header{grid-template-columns:120px 1fr 128px}.logo{font-size:34px;letter-spacing:-3px}.tag{display:none}.topOpps{display:none}.roomMenu{width:128px}.menuGrid{grid-template-columns:1fr}.menuGrid button{min-height:22px}.codeLabel{display:none}.content{grid-template-columns:130px minmax(170px,1fr) 145px;gap:4px}.chatPanel{height:44%}.panel{border-radius:8px}.piles{gap:16px}.tagline{display:none}.bottom{grid-template-columns:1fr;padding:10px 2% 4px}.slot{width:44px;height:62px}.card{width:44px;height:62px}.hand{gap:2px}.youTitle{font-size:12px}.youCount{font-size:7px}.footerRule{font-size:5px}.footerPill{font-size:5px}.caCardWrap .card{width:76px;height:106px}.caButtons button{font-size:8.5px;min-height:32px;padding:6px 9px}.throwRing{display:none}}
+
+/* ===== FINAL MOCKUP OVERLAY / 16:9 STAGE ===== */
+html,body{background:#050302;overflow:hidden}
+.app{display:grid;place-items:center;width:100vw;height:100vh;padding:0;background:#050302}
+.table{width:100vw;height:min(56.25vw,100vh);max-height:100vh;aspect-ratio:16/9;padding:0;border-radius:0;overflow:hidden;background:#07110d url('/table-background.png') center center/cover no-repeat;box-shadow:none}
+.table:before,.table:after{display:none}
+.feltWrap{inset:0;border-radius:0;background:transparent;box-shadow:none;z-index:1}
+.feltWrap:before,.feltWrap:after{display:none}
+.shell{position:absolute;inset:0;z-index:10;display:block;padding:0;height:100%}
+.header{position:absolute;inset:0;display:block;padding:0;z-index:1000;pointer-events:none}
+.brand{display:none}
+.topOpps{position:absolute;left:20.7%;right:20.5%;top:5.2%;display:flex;justify-content:space-between;gap:2%;padding:0;pointer-events:auto}
+.opp{min-width:0;width:30%;flex:1;padding:.65% 1%;border-radius:14px 14px 20px 20px}
+.opp:nth-child(1){transform:translateY(1%) rotate(-2.3deg)}
+.opp:nth-child(2){transform:translateY(-2%)}
+.opp:nth-child(3){transform:translateY(1%) rotate(2.3deg)}
+.roomMenu{position:absolute;right:1.1%;top:2%;width:14.8%;z-index:3000;pointer-events:auto}
+.content{position:absolute;inset:0;display:block;z-index:100}
+.leftCol{position:absolute;left:1%;top:21.5%;width:19.5%;height:52%;display:block;pointer-events:auto}
+.logPanel{height:68%;padding:2.8%;}
+.chatPanel{height:29%;min-height:0;margin-top:2%;padding:2.8%}
+.rightCol{position:absolute;right:1%;top:29%;width:25.2%;height:66%;padding:0;display:block;pointer-events:none}
+.rightCol .panel{pointer-events:auto}
+.ability{height:17%;min-height:0;padding:4% !important}
+.values{height:51%;min-height:0;margin-top:2%;padding:4% !important}
+.knockPanel{position:absolute;right:0;bottom:0;width:74%;height:18%;min-height:0;padding:0 !important;background:transparent !important;border:0 !important;box-shadow:none !important;pointer-events:none}
+.knockBtn{width:100%;height:100%;min-height:0;font-size:clamp(12px,1vw,18px);pointer-events:auto}
+.center{position:absolute;inset:0;display:block;min-height:0}
+.stage{position:absolute;inset:0;display:block;width:100%;height:100%}
+.statusPill{top:34%;font-size:clamp(11px,.8vw,15px);z-index:200}
+.drawTimer{top:30%;font-size:clamp(10px,.7vw,14px);z-index:250}
+.piles{position:absolute;left:42.8%;top:34.5%;transform:translate(-50%,-50%);gap:4vw}
+.stack{width:6vw;height:7.3vw;max-width:94px;max-height:112px}
+.pileLabel{font-size:clamp(12px,.9vw,17px)}
+.pileCount{font-size:clamp(8px,.55vw,11px)}
+.throwRing{right:-4.1vw}
+.centerAction{position:absolute;left:50%;bottom:20%;transform:translateX(-50%);z-index:2000}
+.centerAction.drawnMode{flex-direction:row;align-items:center}
+.bottom{position:absolute;left:19%;right:19%;bottom:0;height:30%;padding:0;display:block;z-index:500}
+.bottom:before,.bottom:after{display:none}
+.bottom>div:first-child{display:block;position:absolute;left:3%;bottom:22%;z-index:2}
+.youTitle{font-size:clamp(18px,1.5vw,28px)}
+.youCount{font-size:clamp(9px,.65vw,12px)}
+.hand{position:absolute;left:16%;right:16%;bottom:9%;height:68%;display:flex;align-items:flex-end;justify-content:center;gap:clamp(6px,.55vw,10px);transform:none;z-index:4}
+.slot{width:5.2vw;height:7.25vw;max-width:80px;max-height:112px}
+.footerRule,.footerPill{display:none}
+.card{width:100%;height:100%}
+.caCardWrap .card{width:98px;height:137px}
+.caSide{position:relative}
+.panel{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:rgba(3,10,8,.82)}
+.panelTitle{font-size:clamp(13px,1vw,18px)}
+.logLine{font-size:clamp(8px,.62vw,11px)}
+.valuesText{font-size:clamp(7px,.58vw,11px)}
+.abilityText{font-size:clamp(8px,.68vw,12px)}
+.chatForm input{font-size:clamp(8px,.58vw,11px)}
+.menuGrid button{font-size:clamp(8px,.62vw,12px)}
+.code{font-size:clamp(15px,1.25vw,22px)}
+.codeLabel,.roomTitle{font-size:clamp(7px,.48vw,10px)}
+.avatar{width:2vw;height:2vw;flex-basis:2vw;max-width:31px;max-height:31px}
+.name{font-size:clamp(9px,.72vw,13px)}
+.cardsCount,.statusText{font-size:clamp(7px,.52vw,10px)}
+.miniBack{width:2.25vw;height:3.15vw;max-width:34px;max-height:48px}
+
+/* Draw animation: real deck-to-hand motion, calculated from live DOM geometry. */
+.fly.smoothDraw{animation:flyDraw 1.05s cubic-bezier(.18,.82,.25,1) forwards;will-change:transform,opacity;backface-visibility:hidden;transform:translate3d(0,0,0)}
+.drawTransitHide{visibility:hidden!important}
+@media(max-aspect-ratio:16/9){.table{width:177.7778vh;height:100vh}}
+
 </style>
 </head>
 <body>
@@ -384,7 +429,7 @@ button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
         </div></main>
         <aside class="rightCol">
           <section class="panel ability"><div class="panelTitle">Current Card Ability</div><div class="abilityRow"><div id="abilityCard"></div><div id="abilityText" class="abilityText">Draw a special card to reveal its ability.</div></div></section>
-          <section class="panel values"><div class="panelTitle">Card Values</div><div class="valuesText"><ul><li>Ace = 1</li><li>2–10 = face value</li><li>Jack = 11</li><li>Queen = 12</li><li>King = 13</li><li><strong>K♦ = −1</strong> while face down</li></ul><div class="ruleLine"><strong>Special Abilities</strong> (only when drawn):</div><ul><li>8 / 9 / 10 → Look at one of your cards.</li><li>J → Blindly switch one of your cards with another player.</li><li>Q → Look at one of yours and one opponent's card.</li><li>K / K♦ → Look at one of yours and one opponent's card, then optionally switch those exact cards.</li></ul></div></section>
+          <section class="panel values"><div class="panelTitle">Card Values</div><div class="valuesText"><div>A = 1 · 2–10 = face value · J = 11 · Q = 12 · K = 13</div><div class="ruleLine"><strong>K♦</strong> = −1 while face down.</div><div class="ruleLine"><strong>Special Abilities</strong> (only when drawn):</div><div class="ruleLine">8 / 9 / 10 → Look at one of your cards.</div><div class="ruleLine">J → Blindly switch one of your cards with another player.</div><div class="ruleLine">Q → Look at one of yours and one opponent's card.</div><div class="ruleLine">K / K♦ → Look at one of yours and one opponent's card, then optionally switch those exact cards.</div></div></section>
           <section class="panel knockPanel"><button id="knockBtn" class="danger knockBtn">⚑ Knock</button></section>
         </aside>
       </div>
@@ -596,18 +641,37 @@ function render(){
 function showEnd(){if($('modalHost').classList.contains('open'))return;const scores=state.scores?state.scores.map(s=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #fff1"><span>${esc(s.name)}</span><strong>${s.score}</strong></div>`).join(''):'';showModal(`<div class="modal"><div class="modalTitle">${esc(state.winner||'Game Over')} wins</div><div class="modalSub">${state.scores?'Final scores':'The game ended because a player emptied their hand.'}</div>${scores}<div class="choices" style="margin-top:14px"><button id="closeEnd" class="primary">Back to Room</button></div></div>`);$('closeEnd').onclick=closeModal}
 function animateDraw(){
   if(drawAnimating||!state?.drawn)return;
-  const src=document.querySelector('#deck .card:last-child'),target=$('centerAction');
+  const src=document.querySelector('#deck .card:last-child');
+  const target=$('centerAction');
   if(!src||!target){mode='drawnMenu';render();return}
   drawAnimating=true;
   target.classList.add('drawTransitHide');
-  const a=src.getBoundingClientRect(),b=target.getBoundingClientRect(),el=document.createElement('div');
-  el.className='fly smoothDraw';el.innerHTML=card(null,true);
-  const bx=b.left+b.width/2-36, by=b.top+b.height*.12;
-  el.style.left=a.left+'px';el.style.top=a.top+'px';
-  el.style.setProperty('--tx',(bx-a.left)+'px');el.style.setProperty('--ty',(by-a.top)+'px');
-  el.style.setProperty('--dx',((bx-a.left)*.42)+'px');el.style.setProperty('--dy',((by-a.top)-75)+'px');
+  const a=src.getBoundingClientRect();
+  const b=target.getBoundingClientRect();
+  const el=document.createElement('div');
+  el.className='fly smoothDraw';
+  el.innerHTML=card(null,true);
+  const startX=a.left+a.width/2-36;
+  const startY=a.top+a.height/2-50;
+  const endX=b.left+b.width/2-36;
+  const endY=b.top+b.height*.12;
+  el.style.left=startX+'px';
+  el.style.top=startY+'px';
+  el.style.setProperty('--tx',(endX-startX)+'px');
+  el.style.setProperty('--ty',(endY-startY)+'px');
+  el.style.setProperty('--dx',((endX-startX)*.42)+'px');
+  el.style.setProperty('--dy',((endY-startY)-75)+'px');
   document.body.appendChild(el);
-  setTimeout(()=>{el.remove();drawAnimating=false;target.classList.remove('drawTransitHide');mode='drawnMenu';render();target.classList.add('actionPing');setTimeout(()=>target.classList.remove('actionPing'),700)},1080);
+  requestAnimationFrame(()=>el.getBoundingClientRect());
+  setTimeout(()=>{
+    el.remove();
+    drawAnimating=false;
+    target.classList.remove('drawTransitHide');
+    mode='drawnMenu';
+    render();
+    target.classList.add('actionPing');
+    setTimeout(()=>target.classList.remove('actionPing'),700);
+  },1080);
 }
 function actionPointForPlayer(actorId){
   if(actorId===state?.playerId){

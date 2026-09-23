@@ -168,7 +168,7 @@ function renderCenterAction(){
     const buttons=mode==='drawnMenu'?`<div class="caButtons">${special?'<button id="caAbility" class="goldBtn">★ Use Ability</button>':''}<button id="caReplace">⇄ Replace Face-Down Card</button><button id="caDiscard" class="primary">▢ Discard</button></div>`:'';
     el.innerHTML=`<div class="caCardWrap">${card(drawn,false)}</div><div class="caSide"><div class="caPrompt">${prompt}</div>${buttons}<div class="caCancelHint">Click anywhere on the green felt to go back.</div></div>`;
     if(mode==='drawnMenu'){
-      if($('caAbility')) $('caAbility').onclick=()=>{ actionStatus='Using Ability'; clearTimeout(actionStatusTimer); socket.emit('beginAbility'); mode='pickOwnForAbility'; render() };
+      if($('caAbility')) $('caAbility').onclick=()=>{socket.emit('beginAbility');mode='pickOwnForAbility';render()};
       $('caReplace').onclick=()=>{mode='pickReplace';render()}; $('caDiscard').onclick=()=>{socket.emit('discardDrawn');resetUiMode();render()};
     }
     return;
@@ -257,7 +257,7 @@ function howToPlay(){
     <div class="ruleBlock"><h3>30-Second Decision</h3><p>After drawing, you have 30 seconds to decide. If time expires, the drawn card is automatically discarded and the turn advances.</p></div>
     <div class="ruleBlock"><h3>Throw While Someone Decides</h3><p>While another player has a drawn card, other players may only throw a hidden card that matches the current discard pile. No other actions are available to them.</p></div>
     <div class="ruleBlock"><h3>Knock</h3><p>If you believe your total is 4 points or fewer, you may knock. Your turn is skipped, everyone else gets one final turn, then all remaining cards are revealed and the lowest score wins.</p></div>
-    <div class="ruleBlock"><h3>Card Values</h3><ul><li>Ace = 1</li><li>2–10 = face value</li><li>Jack = 11</li><li>Queen = 12</li><li>King = 13</li><li><strong>K♦ = −1</strong> while face down</li></ul></div>
+    <div class="ruleBlock"><h3>Card Values</h3><p>A = 1 · 2–10 = face value · J = 11 · Q = 12 · K = 13. The King of Diamonds is −1 while face down.</p></div>
     <div class="ruleBlock"><h3>Special Abilities</h3><ul><li>8 / 9 / 10: look at one of your cards.</li><li>J: blindly switch one of your cards with another player.</li><li>Q: look at one of yours and one opponent's card.</li><li>K: look at one of yours and one opponent's card, then optionally switch those exact two cards.</li></ul><p>Abilities only activate when the special card is drawn and played directly onto the pile.</p></div>
   </div></div>`);
   $('rulesClose').onclick=closeModal;
