@@ -87,6 +87,7 @@ function startGame(room){
   room.logs=['Game started.']; room.chat=[];
 }
 function ensureTurn(room,socket){
+  if(!room.started) throw new Error('The game has not started. Add an AI or friend, then press Start Game.');
   const p=room.players.find(x=>x.socketId===socket.id);
   if(!p) throw new Error('You are not in this room.');
   if(room.ended || room.turn!==playerIndex(room,p.id)) throw new Error('It is not your turn.');
@@ -180,6 +181,7 @@ function finishNewKnock(room){ if(emptyWin(room)) return emitRoom(room); advance
 io.on('connection', socket=>{
   socket.on('create', ({name='Player'}={})=>{try{const room=createRoom(name);const host=room.players[0];host.socketId=socket.id;socket.join(room.code);socket.data.playerId=host.id;socket.emit('joined',{code:room.code,playerId:host.id});emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('join', ({code,name='Player',playerId}={})=>{try{const room=rooms.get(String(code||'').trim().toUpperCase());if(!room)throw new Error('Room not found.');const reconnect=playerId&&room.players.find(p=>p.id===playerId&&!p.ai);if(reconnect){reconnect.socketId=socket.id;socket.data.playerId=reconnect.id;socket.join(room.code);socket.emit('joined',{code:room.code,playerId:reconnect.id});log(room,`${reconnect.name} reconnected.`);emitRoom(room);return;}if(room.started)throw new Error('That game has already started.');if(room.players.length>=4)throw new Error('Room is full.');const p={id:token(),socketId:socket.id,name:String(name||'Player').slice(0,20),ai:false,hand:[]};room.players.push(p);socket.data.playerId=p.id;socket.join(room.code);socket.emit('joined',{code:room.code,playerId:p.id});log(room,`${p.name} joined the room.`);addRoomChat(room,p.name,'Hello!');emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
+  socket.on('addAiPlayer',()=>{try{const room=roomForSocket(socket);if(!room)throw new Error('Join a room first.');if(room.hostId!==socket.data.playerId)throw new Error('Only the host can add AI.');if(!addAI(room))throw new Error('Room is full or game already started.');emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('addAI',()=>{try{const room=roomForSocket(socket);if(!room)throw new Error('Join a room first.');if(room.hostId!==socket.data.playerId)throw new Error('Only the host can add AI.');if(!addAI(room))throw new Error('Room is full or game already started.');emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('start',()=>{try{const room=roomForSocket(socket);if(!room)throw new Error('Join a room first.');if(room.hostId!==socket.data.playerId)throw new Error('Only the host can start.');startGame(room);emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
   socket.on('draw',()=>{try{const room=roomForSocket(socket),p=ensureTurn(room,socket);if(room.drawn[p.id])throw new Error('You already drew a card.');recycleDiscardIntoDeck(room);if(!room.deck.length)throw new Error('There are no cards left to draw.');room.drawn[p.id]=room.deck.pop();log(room,`${p.name} drew a card.`);emitRoom(room);}catch(e){socket.emit('errorMsg',e.message)}});
